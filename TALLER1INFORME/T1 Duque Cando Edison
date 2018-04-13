@@ -1,0 +1,25 @@
+library(PASWR)
+set.seed(1:5)
+x <- c(rnorm(10, mean = 0, sd = 0.1),5,6.8,8)#simulasion fijado en semillas
+hist(x)
+y <- boxplot(x)
+sumary(x)
+names(y)
+
+which (x %in% y$out )#datos atipicos y posiciones
+
+# opcion 1
+filtro <- x %in% y$out;filtro
+x[filtro]
+x[!filtro]
+
+# opcion 2
+ind <- which (filtro)
+x[ind]
+
+EDA(x)
+
+EDA(ind)
+
+par(mfrow <- c(2,2))
+plot(z)
