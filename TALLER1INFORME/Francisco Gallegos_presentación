@@ -1,0 +1,228 @@
+---
+title: "Modelos Logit"
+author: "Francisco Gallegos Silva"
+date: "11 de abril de 2018"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Objetivo
+
+- Para este ejerecicio se utilizaron datos de la Encuesta Nacional de Empleo Desempleo y Subempleo ENEMDU con corte septiembre de 2017.
+
+- El objetivo del análisis es determinar la discrimación laboral en términos de género y étnia al momento de situarse o no con empleo adecuado; es decir, bajo las condiciones (horas, remuneracion, edad) justas. 
+
+- Cabe mencionar que se utiliza para el análisis a los individuos en edad de trabajar, es decir que tenga o sea mayor a los 15 años de edad.
+
+```{r, warning=FALSE, include=FALSE}
+library(survey)
+library(foreign)
+library(margins)
+library(plotly)
+
+setwd("C:/Users/francisco.gallegos/Desktop/Curso R/Módulo II/Bases de datos/bases spss")
+Enemdu <- read.spss(file="201709_EnemduBDD_15anios.sav", use.value.labels = F, to.data.frame = T)
+Enemdu1 <- subset(x=Enemdu, subset = petn==1 & pobla15==1)
+
+Enemdu1$ciudad <- as.character(Enemdu1$ciudad)
+Enemdu1$zona <- as.character(Enemdu1$zona)
+Enemdu1$sector <- as.character(Enemdu1$sector)
+
+zeros <- function(s){
+  if(nchar(s)<6){
+    return(paste0("0",(s)))
+  }
+  return (s)
+}
+
+Enemdu1$ciudad <- sapply(Enemdu1$ciudad,zeros)
+Enemdu1$ID <- paste0(Enemdu1$ciudad,Enemdu1$zona,Enemdu1$sector)
+Enemdu1$Prov <- substr(Enemdu1$ciudad, start = 1, stop = 2)
+Enemdu1$fexp <- as.numeric(Enemdu1$fexp)
+
+#Empleo Adecuado:
+Enemdu1$Empleo_Adecuado <- Enemdu1$adec
+Enemdu1$Empleo_Adecuado[is.na(Enemdu1$Empleo_Adecuado)] <- "0"
+Enemdu1$Empleo_Adecuado <- as.numeric(Enemdu1$Empleo_Adecuado)
+
+#Sexo:
+Enemdu1$Femenino <- 0; Enemdu1$Femenino[Enemdu1$p02 == "2"] <- "1"
+Enemdu1$Masculino <- 0; Enemdu1$Masculino[Enemdu1$p02 == "1"] <- "1"
+
+#Etnia:
+Enemdu1$Indigena <- 0;Enemdu1$Indigena[Enemdu1$p15 == "1"] <- "1"
+Enemdu1$Mestizo <- 0;Enemdu1$Mestizo[Enemdu1$p15 == "6"] <- "1"
+
+Enemdu1$Afro <- 0
+Enemdu1$Afro[Enemdu1$p15 == "3"] <- "1" # negro
+Enemdu1$Afro[Enemdu1$p15 == "2"] <- "1" # afrodescendiente
+Enemdu1$Afro[Enemdu1$p15 == "4"] <- "1" # mulato
+
+Enemdu1$Montubio <- 0;Enemdu1$Montubio[Enemdu1$p15 == "5"] <- "1"
+Enemdu1$Blanco <- 0;Enemdu1$Blanco[Enemdu1$p15 == "7"] <- "1"
+
+#Edad
+Enemdu1$edad <- Enemdu1$p03
+Enemdu1$edad2 <- Enemdu1$p03^2
+
+```
+
+## Datos tipo Encuesta
+
+- Al trabajar con datos de encuesta es necesario fijar a los mismos con dicho formato, es decir considerar el factor de expansión para la muestra y la estratificación de la misma, para inferir los datos poblacionales. 
+
+- Previo a ello se construyo un identificador, que resulta de la concatenación de los códigos de ciudad, zona, sector y otro que indique la provincia, ya que es el nivel de estratificación de los datos
+
+```{r, warning=FALSE, echo=T}
+Enemdu_svy <- svydesign(ids = ~Enemdu1$ID, strata = ~Enemdu1$Prov, 
+                        weights = ~Enemdu1$fexp, data = Enemdu1)
+options(survey.lonely.psu = "certainty")
+```
+
+## Análisis exploratorio
+
+Sexo:
+
+- Los datos reflejan grupos homogeneos o equitativos dependiendo del sexo de los individuos.La diferencia es  de 3.12 %, siendo mayor el grupo de mujeres que comprenden el 51.56% y los hombres el 48.44%.
+
+```{r, warning=FALSE, include=F}
+tab1 <- as.data.frame(svytable(~p02, design = Enemdu_svy))
+tab1$label1 <- c("Masculino","Femenino")
+tab1$percent <- round(tab1$Freq/sum(tab1$Freq)*100, digits = 2)
+tab1$label2 <- paste(tab1$label1, tab1$percent , "%", sep = " ")
+m <- list(l = 20,r = 20,b = 50,t = 50,pad = 2)
+p1 <- plot_ly(tab1, labels = ~label1, values= ~Freq, type = 'pie',
+             textposition = 'inside',
+             textinfo = 'label+percent')%>%
+  layout(title= 'Proporción de Hombres y Mujeres',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+         )
+```
+```{r, warning=FALSE, echo=F}
+p1
+```
+
+## Análisis exploratorio  
+
+Situación de Empleo:
+
+- Existe una menor proporción de individuos en situación de Empleo no Adecuado, que conjuga el 27.81 % del total, mientras que el restante 72.19% registra Empleo Adecuado.
+
+```{r, warning=FALSE, include=F}
+tab0 <- as.data.frame(svytable(~Empleo_Adecuado, design = Enemdu_svy))
+tab0$label1 <- c("Adecuado","No adecuado")
+tab0$percent <- round(tab0$Freq/sum(tab0$Freq)*100, digits = 2)
+tab0$label2 <- paste(tab0$label1, tab0$percent , "%", sep = " ")
+p0 <- plot_ly(tab0, labels = ~label1, values= ~Freq, type = 'pie',
+             textposition = 'inside',
+             textinfo = 'label+percent')%>%
+  layout(title= 'Proporción de Empleo Adecuado',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+```
+```{r, warning=FALSE, echo=F}
+p0
+```
+
+## Análisis exploratorio  
+
+Etnia:
+
+- El grupo predonominante son mestizos que conjuga el 81.73% del total, seguido de la étnia índigena con 7.00%, 
+- Las etnias agrupadas como 'afro' comprenden a las categorías Afroecuatoriano, Negro y Mulato, en conjunto representan el 5.03% 
+- El grupo es montubio con 4.52% y finalmente la categoría Blanco con 1.65%.
+
+```{r, warning=FALSE, include=F}
+tab2 <- as.data.frame(svytable(~p15, design = Enemdu_svy))
+tab2$label1 <- c("Indigena","Afroecua","Negro","Mulato","Montubio","Mestizo","Blanco","Otro")
+tab2$percent <- round(tab2$Freq/sum(tab2$Freq)*100, digits = 2)
+tab2 <- tab2[order(-tab2$percent),]
+tab2$label2 <- paste(tab2$label1, tab2$percent , "%", sep = " ")
+```
+## Análisis exploratorio  
+
+Etnia:
+```{r, echo=F}
+bar1 <- barplot(tab2$percent,names.arg= tab2$label1, main="Proporcion de Etnias", ylab = "%", col = rainbow(8), ylim = c(0,100), las=2)
+text(x = bar1, y = tab2$percent, labels = tab2$percent, pos = 3, cex = 0.8, col = "black")
+```
+
+## Análisis exploratorio  
+
+Edad:
+
+- La edad de los individuos no presenta una distribución uniforme, la edad de los individuos se concentra más en una edad bajo los 20 años. 
+
+- Deesde los 20 años hasta los 40 años, existe una de cierta manera un grupo relativamente uniforme, y pasado los 40 años los grupos son cada vez menores. 
+
+- En términos generales se puede entender que principalmente la muestra se compone de los segmentos más jovenes de la población en edad de trabajar.
+
+## Análisis exploratorio  
+
+Edad:
+```{r, echo=F}
+hist(Enemdu1$p03, xlab = "Edad", main = "Distribución de Edad", col = rainbow(50))
+```
+
+##Planteamiento del modelo
+Se plantea un modelo lineal generalizado, con función link logistica, para estudiar la discrimanción de género o racial con la siguiente forma funcional:
+
+
+<small> $log(\frac{p(Empelo Adecuado}{1-p(Empleo Adecuado)}) = \beta0 + \beta1*Sexo + \beta2*Edad +\beta3*Edad^2 + \beta4*Etnia + \epsilon_{it}$ </small> 
+
+
+Donde $Empleo Adecuado$ es una varaible dicotómica (dummy) que indica si individuo es una situación de empleo adecuado (bajo condiciones justas), la cual está en función del $Sexo$, la $Edad$, y la $Etnia$.
+
+```{r, include=F}
+m1 <- svyglm(Empleo_Adecuado~Femenino+edad+edad2+Mestizo,Enemdu_svy,family=quasibinomial(link = logit))
+m2 <- svyglm(Empleo_Adecuado~Femenino+edad+edad2+Indigena,Enemdu_svy,family=quasibinomial(link = logit))
+m3 <- svyglm(Empleo_Adecuado~Femenino+edad+edad2+Afro,Enemdu_svy,family=quasibinomial(link = logit))
+m4 <- svyglm(Empleo_Adecuado~Femenino+edad+edad2+Montubio,Enemdu_svy,family=quasibinomial(link = logit))
+m5 <- svyglm(Empleo_Adecuado~Femenino+edad+edad2+Blanco,Enemdu_svy,family=quasibinomial(link = logit))
+```
+##Resultados de modelos
+###Modelo 1
+```{r, echo=F, warning=F}
+summary(m1)
+margins(m1)
+```
+##Resultados de modelos
+###Modelo 2
+```{r, echo=F, warning=F}
+summary(m2)
+margins(m2)
+```
+##Resultados de modelos
+###Modelo 3
+```{r, echo=F, warning=F}
+summary(m3)
+margins(m3)
+```
+##Resultados de modelos
+###Modelo 4
+```{r, echo=F, warning=F}
+summary(m4)
+margins(m4)
+```
+##Conclusiones
+
+- Se puede entender que en promedio un año adicional de edad aumenta la probabilidad en 5% de situarse en empleo adecuado. 
+
+- La edad al cuadrado se puede entender como la probabilidad de salir del empleo adeucado, o tener malas condiciones laborales, de los individuos que sean adultos mayores. 
+
+- La variable Sexo, llega a comprobar la existencia de discriminación por género dentro del empleo adecuado, al ser de género femenino la probabilidad de tener un empleo audecuado se reduce (de manera consistente) en 21%.
+
+##Conclusiones
+
+- Las variables que categorizan la étnia del indivuo no siempre muestran significancia en las estimaciones, específicamente para las minorías étnicas Blanco y Negro. 
+
+- La pertenencia al grupo étnico más grande, Mestizo, está asociado con el incremento en la probabilidad de 8% de situarse en una situación de empleo adecuado. 
+
+- Pertener a las minorías étnicas Indígena y Montubio, está asociado con la reducción de 12 y 10% en la probabilidad de situarse en una situación de empleo adecuado. 
+
+- Se puede concluir que existe discriminación laboral estadísticamente signifircativa en las minorías etnicas del Ecuador.
+
