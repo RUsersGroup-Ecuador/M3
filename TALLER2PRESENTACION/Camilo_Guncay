@@ -1,0 +1,194 @@
+---
+title: "Modelo Predicción de la Inflación en Ecuador"
+author: "Camilo Guncay"
+date: "14 de abril, 2018"
+output:
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(readxl)
+library(ggplot2)
+library(scales)
+library(forecast)
+library(ggthemes)
+library(gridExtra)
+library(urca)
+library(tsoutliers)
+library(car)
+library(highcharter)
+```
+
+## La inflación
+
+La inflación es el aumento generalizado y sostenido del nivel de precios existentes en el mercado durante un período de tiempo
+
+Las causas de la inflación son diversas, teóricamente la inflación se explica mediante el modelo AD-AS (Demanda y Oferta Agregada)
+```{r Grafico1, echo=FALSE, fig.align="center", out.width="400px"}
+knitr::include_graphics("C:/Users/Sabina/Desktop/Curso R/Markdown/Imagen1.png")
+```
+
+* En el largo y corto plazo los shocks de OA y DA ejercen presiones inflacionarias 
+
+* Las presiones inflacionarias afectan la producción únicamente en el corto plazo
+
+* Bajo este modelo después de shocks de OA y DA no se retorna a los niveles de precio iniciales
+
+El análisis empírico de las relaciones de variables macroeconómicas con el nivel de precios consiste principalmente en la utilización de modelos econométricos de series de tiempo.
+
+## Metodología 
+### Modelo AR
+Los modelos autorregresivos se abrevian con la palabra AR tras la que se indica el orden del modelo: AR(1), AR(2),....etc. 
+
+El orden del modelo expresa el número de observaciones retasadas de la series temporal analizada que intervienen en la ecuación
+
+\begin{equation}
+Y_t = \phi_0 + \phi_t Y_{t-1} + ... + \phi_pY_{t-p}
+\end{equation}
+
+### Modelo MA
+Un modelo de los denominados de medias móviles es aquel que explica el valor de una determinada variable en un período t en función de un término independiente y una sucesión de errores correspondientes a períodos precedentes, ponderados convenientemente
+
+\begin{equation}
+Y_t=\mu + a_t + \theta_1a_{t-1} +...+ \theta_qa_{t-q}
+\end{equation}
+
+## Modelo ARIMA (p,d,q) (P,D,Q) [s]
+ 
+<br> 
+ 
+En su forma más general el modelo ARIMA(p,d,q) ARIMA(P,D,Q,)[s] podría escribirse como:
+
+<br>
+
+\begin{equation}
+Y_t=\varphi_1Y_{t-1}+...+\varphi_{Ps+p+Ds+d}Y_{T-Ps-p-Ds-d} + .. 
+\end{equation}
+
+\begin{equation}
+\delta + U_t + \theta_1U_{t-1} + \theta_{Qs+q}U_{T-sQ-q}
+\end{equation}
+<br>
+
+Entendiendo que puede haber más de un proceso generador de la serie (en la parte regular y en la estacional) y escribiendo una combinación de los modelos MA(q) y AR(p) que han precisado de una serie de diferenciaciones "d" en la parte regular o "D" en la parte estacional para que fueran estacionarios.
+
+## Serie del IPC 
+```{r Cargar la base, include=FALSE}
+base<-read_xlsx("C:/Users/Sabina/Desktop/Curso R/Markdown/base_final.xlsx", sheet = "final")
+base<-subset(base, select=c(fecha, ipc_ecu))
+colnames(base)<-c("fecha", "ipc")
+base$fecha<-seq(as.POSIXct("2003/07/01"), by = "month", length.out = nrow(base))
+tema_camilo<-theme(legend.title = element_blank(), 
+                    panel.background = element_rect(fill="white"), panel.grid.major = element_line(colour = "grey95"), 
+                    axis.ticks = element_blank(), strip.background = element_rect(fill = "gray92"), axis.text.x = element_text(color = "black"), axis.text.y = element_text(color = "black"), plot.title = element_text(hjust = 0.5) )
+```
+
+
+```{r Grafico ipc_nivel, fig.align="center"}
+ggplot(data = base, aes(x=fecha, y=ipc)) + geom_line(color="firebrick2", size=1.05) + geom_point(color="firebrick2", size=1.15) + tema_camilo + scale_x_datetime(breaks =  date_breaks(width = "2 years"), labels = date_format(("%Y"))) + labs(x="\nFecha", y="IPC", title="Indice de Precios al Consumidor\n ")
+```
+Del gráfico anterior se puede observar claramente que la serie del IPC a nivel presenta una clara tendencia creciente, razón por la cual no se puede considerar como una serie estacionaria.
+
+## Autocorrelación de la Serie al Nivel 
+<br>
+
+La serie no presenta estacionariedad puesto que la autocorrelación de la serie se mantiene por un largo periodo de tiempo
+
+<br>
+
+```{r Autocorrelacion Nivel, fig.align="center", fig.width=8, fig.height=3, echo=FALSE}
+acf1<-ggAcf(base$ipc, lag.max = 32) + labs(title="\nAutocorrelación IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+pacf1<-ggPacf(base$ipc, lag.max = 32) + labs(title="\nAutocorrelación Parcial IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf1, pacf1, ncol=2)
+```
+
+## IPC de la serie diferenciada
+```{r Diferenciación Pib, echo=FALSE}
+dipc<-as.data.frame(diff(base$ipc))
+#fechaipc<-seq(as.POSIXct("2003/08/01"), by = "month", length.out = nrow(dipc))
+fechaipc<-base[2:nrow(base),1]
+dipc<-cbind(fechaipc, dipc)
+colnames(dipc)<-c("fecha", "dif_ipc")
+```
+
+```{r Serie diferenciada, fig.align="center"}
+ggplot(data = dipc, aes(x=fecha, y=dif_ipc)) + geom_line(color="darkturquoise", size=1.1) + geom_point(color="darkturquoise", size=1.25) + tema_camilo + 
+  scale_x_datetime(breaks = date_breaks(width = "2 years"), labels = date_format(format = "%Y")) + labs(x="\nFecha", y="Tasa de variación\n", title="\nInflación en Ecuador") + 
+  geom_area(aes(y=ifelse(dif_ipc<0, dif_ipc,0)), fill="lightskyblue4")
+```
+
+La serie presenta un comportamiento estacionario. Adicionalmente, el test de raíces unitarias se presenta a continuación lo confirma:
+
+```{r Dickey Fuller, echo=FALSE}
+summary(ur.df(dipc$dif_ipc, type = "none"))
+```
+
+## Autocorrelación serie diferenciada
+
+```{r ACF diferencias, fig.align="center", fig.height=3, fig.width=8, echo=FALSE}
+acf2<-ggAcf(dipc$dif_ipc, lag.max = 32) + labs(title="\nAutocorrelación diferencia IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+pacf2<- ggPacf(dipc$dif_ipc, lag.max = 32) + labs(title="\nAutocorrelación Parcial diferencia IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf2, pacf2, ncol=2)
+```
+
+Del gráfico anterior se puede observar que el modelo a estimar contiene un fuerte comportamiento estacional puesto que cada 12 meses tanto en la autocorrelación y la autocorrelación parcial existen picos que indican la presencia del componente estacional. El modelo a estimar sería:
+
+\begin{equation}
+SARIMA(1,1,2)(0,1,1)[12]
+\end{equation}
+
+## Estimación del Modelo 
+
+Los resultados del modelo se presentan a continuación:
+
+```{r, include=FALSE}
+serie_modelo<-ts(base$ipc, start = c(2003,7), frequency = 12)
+auto.arima(serie_modelo, seasonal = TRUE)
+```
+
+```{r Modelo1 }
+modelo1<-Arima(serie_modelo, order = c(1,1,2), seasonal = c(0,1,1), include.mean = FALSE, include.drift = FALSE, method = "ML")
+summary(modelo1)
+```
+
+## Validación de Supuestos 
+
+### Estabilidad
+Si bien varias de las raíces invertidas se encuentran cercanas al círculo unitario, todas se ubican dentro del círculo unitario.
+
+```{r, fig.align="center", fig.height=3.5, echo=FALSE}
+autoplot(modelo1) + theme(legend.position = "bottom") + tema_camilo + labs(y="Imaginaria")
+```
+
+### Autocorrelación
+Los correlogramas evidencian que no existe autocorrelación, adicionalmente, el estadístico durbin watson es muy cercano a dos confirmando que no existe autocorrelación en los residuos del modelo
+
+```{r, echo=FALSE, fig.width=8, fig.height=3, fig.align="center"}
+acf3<-ggAcf(residuals(modelo1), lag.max = 32) + labs(title="\nAutocorrelación Residuos ") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10)) 
+pacf3<-ggPacf(residuals(modelo1), lag.max = 32) + labs(title="\nAutocorrelación Parcial Residuos") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf3, pacf3, ncol=2)
+dwatson<-durbinWatsonTest(as.vector(residuals(modelo1)))
+paste("El valor del estadístico Durbin Watson es:", dwatson)
+```
+
+## Validación de supuestos 
+
+### Normalidad
+El histograma de los residuos evidencia que se podría tratar de una distribución normal, adicionalmente, no se rechaza la hipótesis nula de normalidad del test jarque bera
+
+```{r Normalidad, warning=FALSE, message=FALSE, echo=FALSE, fig.align="center", fig.width=6.5, fig.height=3.5}
+residuos<-residuals(modelo1)
+#ggplot(data = residuos, aes(x=seq(1:length(residuos)), y=residuos)) + geom_line() + geom_point() + tema_camilo
+ggplot(data = residuos, aes(residuos)) + geom_histogram(bins = 25, fill="mediumpurple4") + tema_camilo + labs(title="Distribución de los residuos", x="Residuos", y="Frecuencia")
+JarqueBera.test(residuos)
+```
+
+## Pronósticos de la inflación
+
+```{r, echo=FALSE, fig.align="center", fig.width=12}
+cuadro1<-autoplot(forecast(modelo1, h = 12, level = 95)) + tema_camilo + theme(legend.position = "none")
+cuadro2<-autoplot(forecast(Arima(diff(serie_modelo), order = c(1,0,2), seasonal = c(0,1,1), include.mean = FALSE, include.drift = FALSE, method = "ML"), h = 12, level = 95)) + tema_camilo + theme(legend.position = "none")
+grid.arrange(cuadro1, cuadro2, ncol=2)
+
+```
