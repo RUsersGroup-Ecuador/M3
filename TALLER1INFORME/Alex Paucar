@@ -1,0 +1,280 @@
+---
+title: "Alex Paucar"
+author: "Alex"
+date: "14 de abril de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#**Como funciona R**
+**R como calculadora**
+
+```{r}
+5+3
+15.3*23.4
+sqrt(16)
+```
+**Almacenado y nombres**
+
+```{r}
+
+producto=15.3*23.4
+producto1<-15.3*23.4
+```
+Una vez que se guardan las variables, se las puede referenciar con otros operadores y funciones:
+```{r}
+log(producto)
+log10(producto)
+```
+
+<- se llama asignacion y se utiliza para crear una variable
+Los nombre validos para una variable son combinaciones de letras numeros
+```{r}
+x <- (1:5) # bien escrito
+x<-(1:5) # mal escrito
+```
+##**Generar Datos **##
+```{r}
+seq(1, 5, 0.5) # seq genera secuencias de numeros reales
+seq(1 ,5, 1)
+z <- scan() # sirve para ingresar valores 
+
+z <- scan()
+f <- scan()
+rep(1, 20)
+rep(1:3,30)
+rep(seq(1:3),30)
+rep(1:4,each = 2)
+rep(1:4,c(2,2,2,2))
+sum(x)
+prod(x)
+max(x)
+min(x)
+which.max(c(3,14,15,2)) #posicion del  maximo
+which(c(3,14,15,2)==3)
+which(c(3,14,15,2)==20)
+sort(x, decreasing = TRUE)
+
+fx <- function(x)
+{
+y <- x^2
+cat("El Cuadrado de x es: ",y,"\n")
+return(y)
+}
+fx(5)
+```
+
+##**Importando datos en R**
+Es importante fijar el directorio de trabajo
+```{r}
+getwd() # Me dice el directorio actual
+setwd("d:/Users/Alex Paucar/Desktop/Módulo 1") # Fijo un nuevo directorio
+```
+Los archivos más usados para importación son:
+
++ Excel .xml (.csv)
++ Stata .dta
++ SPSS .sav
+
+**Stata**
+Se requiere el paquete foreign
+```{r}
+# install.packages("foreign")
+library(foreign)
+```
+
+#**Vectores**
+
+(Casi) todo en R es un objeto
+
+
++ El objeto más básico en R es un vector
++ Vector: Colección ordenada elementos del mismo tipo
+```{r}
+x <- c(1, 2, 3); y <- c("a", "b", "Hola")
+z1 <- c(TRUE, TRUE, FALSE)
+x  <-  9:29
+x <- c(1+0i, 2+4i)
+```
+
+#Mezclando Objetos
+```{r}
+y <- c(1.7, "a")    ## character
+y <- c(TRUE, 2)     ## numeric
+y <- c("a", TRUE)   ## character
+```
+
+Cuando diferentes objetos son mezclados en un vector ocurre una coerción tal que el vector se de la misma clase.
+Se puede cambiar la clase de los objetos usando funciones del tipo 
+
+```{r}
+x <- 0:6
+class(x)
+as.numeric(x)
+as.logical(x)
+as.character(x)
+as.complex(x)
+```
+
+#**Álgebra de Vectores**
+```{r}
+a <- c(1,3,2)
+a
+
+t(a)# trasponer
+```
+
+##**Suma de vectores**
+Se suman los vectores uno a uno.
+```{r}
+a <- c(1,3,2)
+b <- c(2,8,9)
+a+b
+```
+#**Propiedades de indexación**
+Indexación
+
+Extrae los elementos 1 y 3 de $y$
+```{r}
+y <- c(1.2,3.9,0.4,0.12)
+y[c(1,3)] 
+```
+Se puede crear un filtro en otro vector
+```{r}
+v <- 3:4
+y[v]
+```
+
+Se puede extraer duplicados
+```{r}
+x <- c(4,2,17,5)
+y <- x[c(1,1,3)] 
+y
+z <- c(5,12,13) # excluir elementos
+z[-1] 
+
+z[-1:-2] 
+
+z[1:length(z)-1]
+z[-length(z)]
+```
+**El operador “:”**
+```{r}
+i <- 2
+(1:i)-1 # Esto significa (1:i) NO 1:(i-1)
+1:(i-1)
+```
+#**Secuencias:**
+```{r}
+seq(from=12,to=30,by=3)
+seq(from=1.1,to=2,length=10)
+x <- c(5,12,13);x
+seq(x)
+x <- NULL;x
+seq(x)
+length(seq(x))
+```
+
+##**Repeticiones:**
+
+```{r}
+x <- {rep(8,4);x}
+rep(c(5,12,13),3)
+length(rep(c(5,12,13),3))
+rep(c(5,12,13),each=2)# Se intercalan las copias de X
+```
+#**Matrices y Dataframes**
+```{r}
+my_vector <- 1:20
+dim(my_vector)
+dim(my_vector) <- c(4, 5)
+my_vector
+class(my_vector)
+my_matrix <- my_vector
+patients <- c("Bill", "Gina", "Kelly", "Sean")
+cbind(patients,my_matrix)
+my_data <- data.frame(patients, my_matrix)
+cnames <- c("patient", "age", "weight", "bp", "rating", "test")
+colnames(my_data) <- cnames
+```
+Desde luego, podemos crear un data frame directamente, por ejemplo
+```{r}
+my.data.frame <- data.frame(
+    ID = c("Carla", "Pedro",    "Laura"), 
+    Edad = c(10, 25, 33), 
+    Ingreso = c(NA, 34, 15),
+    Sexo = c(TRUE, FALSE, TRUE),
+  Etnia = c("Mestizo","Afroecuatoriana","Indígena")
+)
+```
+Operaciones con matrices
+```{r}
+m1 <- matrix(1, nr = 2, nc = 2) 
+m2 <- matrix(2, nr = 2, nc = 2) 
+
+rbind(m1, m2) 
+cbind(m1,m2)
+```
++ El operador para el producto de dos matrices es %*%. Por ejemplo, considerando las dos matrices m1 y m2:
+
+##**Arrays**
+```{r}
+x <- array(1:20, dim=c(4,5))
+```
+
+##**Factor**
+```{r}
+z <- factor(LETTERS[1:3], ordered = TRUE)
+x <- factor(c("a", "b", "b", "a"))
+x
+```
+
+```{r}
+sex_char <- c("m", "m", "m")
+sex_factor <- factor(sex_char, levels = c("m", "f"))
+
+table(sex_char)
+table(sex_factor)
+```
+##**Listas**
+```{r}
+x <- list(list(list(list())))
+str(x)
+is.recursive(x)
+```
+c() combinará varias listas en una sola. Si se tiene una combinación de vectores y listas, c() coerciona a los vectores como listas antes de combinarlos. Compara los resultados de list() y c():
+```{r}
+x <- list(list(1, 2), c(3, 4))
+y <- c(list(1, 2), c(3, 4))
+str(x)
+str(y)
+```
+##**Missing Values**
+```{r}
+x <- c(1, 2, NA, 10, 3)
+is.na(x)
+is.nan(x)
+x <- c(1, 2, NaN, NA, 4)
+is.na(x)
+is.nan(x)
+```
+##**Bucles**
+```{r}
+x <- 1:50000
+y <- x^2
+z=0
+for (i in 1:50000) z[i] <- x[i]^2 
+```
+#**Procedimientos Gráficos**
+La función plot(x)
+```{r}
+x <- seq(10,20,1)
+plot(x)
+```
+La función plot(x,y)
+```{r}
+y <- seq(30,40,1)
+plot(x,y)
+```
