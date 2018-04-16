@@ -1,0 +1,234 @@
+---
+title: "Deber Módulo 3"
+author: "Camilo Guncay"
+date: "12 de abril de 2018"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(knitr)
+library(ggplot2)
+library(scales)
+library(urca)
+library(kableExtra)
+library(gridExtra)
+library(ggthemes)
+library(forecast)
+library(tsoutliers)
+library(car)
+library(highcharter)
+getwd()
+```
+
+### Modelo de predicción de la inflación mensual 
+
+La inflación es el aumento generalizado y sostenido del nivel de precios existentes en el mercado durante un períoodo de tiempo, frecuentemente un año. Cuando el nivel general de precios sube, con cada unidad de moneda se adquieren menos bienes y servicios. 
+
+Las causas de la inflación son diversas, teóricamente la inflación se explica mediante el modelo AD-AS (Demanda y Oferta Agregada). 
+
+
+```{r Grafico1, echo=FALSE, fig.align="center", fig.height= 0.2, fig.width=0.2, out.width="500px"}
+knitr::include_graphics("C:/Users/Sabina/Desktop/Curso R/Markdown/Imagen1.png")
+```
+
+* En el largo y corto plazo los shocks de OA y DA ejercen presiones inflacionarias 
+
+* Las presiones inflacionarias afectan la producción únicamente en el corto plazo
+
+* Bajo este modelo después de shocks de OA y DA no se retorna a los niveles de precio iniciales
+
+El análisis empírico de las relaciones de variables macroeconómicas con el nivel de precios consiste principalmente en la utilización de modelos econométricos de series de tiempo. El análisis multivariado para pronosticar la inflación es bastante complejo debido a que los análisis empíricos de la inflación envuelven una gran variedad de variables. Por esta razón, se propone un modelo univariado de vectores autoregresivos con medias móviles. 
+
+<br>
+
+### Metodología 
+
+#### Modelo AR
+Los modelos autorregresivos se abrevian con la palabra AR tras la que se indica el orden del modelo: AR(1), AR(2),....etc. El orden del modelo expresa el número de observaciones retasadas de la series temporal analizada que intervienen en la ecuación. Así, por ejemplo, un modelo AR(1) tendría la
+siguiente expresión:
+
+\begin{equation}
+Y_t = \phi_0 + \phi_t Y_{t-1} + ... + \phi_pY_{t-p}
+\end{equation}
+
+<br>
+
+#### Modelo MA
+Un modelo de los denominados de medias móviles es aquel que explica el valor de una determinada variable en un período t en función de un término independiente y una sucesión de errores correspondientes a períodos precedentes, ponderados convenientemente. Estos modelos se denotan normalmente con las siglas MA, seguidos, como en el caso de los modelos autorregresivos, del orden entre paréntesis. Así, un modelo con q términos de error MA(q) respondería a la siguiente expresión:
+
+\begin{equation}
+Y_t=\mu + a_t + \theta_1a_{t-1} +...+ \theta_qa_{t-q} 
+\end{equation}
+
+<br>
+
+#### Modelo ARIMA(p,d,q) SARIMA(P,D,Q)[s] 
+
+En su forma más general el modelo ARIMA(p,d,q) ARIMA(P,D,Q,)[s] podría escribirse como:
+
+\begin{equation}
+Y_t=\varphi_1Y_{t-1}+...+\varphi_{Ps+p+Ds+d}Y_{T-Ps-p-Ds-d} + ..
+\end{equation}
+
+\begin{equation}
+\delta + U_t + \theta_1U_{t-1} + \theta_{Qs+q}U_{T-sQ-q}
+\end{equation}
+
+Entendiendo que puede haber más de un proceso generador de la serie (en la parte regular y en la estacional) y escribiendo una combinación de los modelos MA(q) y AR(p) que han precisado de una serie de diferenciaciones "d" en la parte regular o "D" en la parte estacional para que fueran estacionarios.
+
+<br>
+
+### Datos 
+
+Para la estimación del modelo de pronóstico de la inflación mensual en el Ecuador, es necesario contar con la serie del Índice de Precios al Consumidor (IPC) para el Ecuador. La utilización de estos modelos  requiere una gran cantidad de datos (al menos sesenta observaciones), por lo que se utilizará datos mensuales a partir de Julio de 2003 hasta Noviembre de 2017. 
+
+```{r Cargar la base, include=FALSE}
+base<-read_xlsx("C:/Users/Sabina/Desktop/Curso R/Markdown/base_final.xlsx", sheet = "final")
+base<-subset(base, select=c(fecha, ipc_ecu))
+colnames(base)<-c("fecha", "ipc")
+base$fecha<-seq(as.POSIXct("2003/07/01"), by = "month", length.out = nrow(base))
+```
+
+A continuación, se presenta un cuadro con el resumen de estadísticas de las principales estadísticas descriptivas del IPC durante el período de análisis considerado. 
+```{r, echo=FALSE}
+kable(summary(base[,"ipc"]))
+```
+
+Adicionalmente se presenta un gráfico que muestra la evolución del IPC. 
+```{r tema graficos, include=FALSE}
+tema_camilo<-theme(legend.title = element_blank(), 
+                    panel.background = element_rect(fill="white"), panel.grid.major = element_line(colour = "grey95"), 
+                    axis.ticks = element_blank(), strip.background = element_rect(fill = "gray92"), axis.text.x = element_text(color = "black"), axis.text.y = element_text(color = "black"), plot.title = element_text(hjust = 0.5) )
+```
+
+<br>
+
+```{r Grafico ipc_nivel, fig.align="center"}
+ggplot(data = base, aes(x=fecha, y=ipc)) + geom_line(color="firebrick2", size=1.05) + geom_point(color="firebrick2", size=1.15) + tema_camilo + scale_x_datetime(breaks =  date_breaks(width = "2 years"), labels = date_format(("%Y"))) + labs(x="\nFecha", y="IPC", title="Indice de Precios al Consumidor\n ")
+```
+
+<br>
+
+Del gráfico anterior se puede observar claramente que la serie del IPC a nivel presenta una clara tendencia creciente, razón por la cual no se puede considerar como una serie estacionaria. Por esta razón se emplea el test de Dickey Fuller aumentado sobre las series a nivel con la finalidad de establecer de manera estadística la presencia de raíces unitarias. 
+
+```{r Test de raíces unitarias, out.width=1}
+summary(ur.df(base$ipc, type = "trend"))
+```
+
+<br>
+
+Se puede observar que los estadísticos t no son menores a los valores críticos, por lo que no se puede rechazar la hipótesis nula de la presencia de una raíz unitaria. Como se mencionó anteriormente la condición necesaria para la estimación de modelos ARIMA es la estacionariedad de las series esto quiere decir que las series no contengan raíces unitarias, es decir las series tengan una varianza y media constante. De igual manera se puede observar que la serie no presenta estacionariedad puesto que la autocorrelación de la serie se mantiene por un largo periodo de tiempo. 
+
+```{r Autocorrelacion Nivel, fig.align="center", fig.width=8, fig.height=3, echo=FALSE}
+acf1<-ggAcf(base$ipc, lag.max = 32) + labs(title="\nAutocorrelación IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+pacf1<-ggPacf(base$ipc, lag.max = 32) + labs(title="\nAutocorrelación Parcial IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf1, pacf1, ncol=2)
+```
+
+
+Con la finalidad de cumplir con esta condición es necesario realizar la diferenciación de las serie de interés en función de determinar la estacionariedad de la misma. Generalmente, resulta útil aplicar una transformación logarítmica a las series antes de diferenciarlas con el objetivo de estabilizar la varianza, no obstante al constar con una variable que es un índice con un año base, no es necesario realizar este paso y se aplica directamente la diferenciación de la serie. 
+
+```{r Diferenciación Pib, echo=FALSE}
+dipc<-as.data.frame(diff(base$ipc))
+#fechaipc<-seq(as.POSIXct("2003/08/01"), by = "month", length.out = nrow(dipc))
+fechaipc<-base[2:nrow(base),1]
+dipc<-cbind(fechaipc, dipc)
+colnames(dipc)<-c("fecha", "dif_ipc")
+```
+
+A continuación, se presenta un gráfico de la serie diferenciada  así como la prueba de Dickey Fuller aumentada para verificar que se cumple con la condición de estacionariedad. 
+
+<br>
+```{r Serie diferenciada, fig.align="center"}
+ggplot(data = dipc, aes(x=fecha, y=dif_ipc)) + geom_line(color="darkturquoise", size=1.1) + geom_point(color="darkturquoise", size=1.25) + tema_camilo + 
+  scale_x_datetime(breaks = date_breaks(width = "2 years"), labels = date_format(format = "%Y")) + labs(x="\nFecha", y="Tasa de variación\n", title="\nInflación en Ecuador") + 
+  geom_area(aes(y=ifelse(dif_ipc<0, dif_ipc,0)), fill="lightskyblue4")
+```
+
+En el gráfico anterior se puede observar que la serie presenta un comportamiento estacionario. Adicionalmente, el test de raíces unitarias evidencia que se presenta a continuación:
+
+```{r Dickey Fuller, echo=FALSE}
+summary(ur.df(dipc$dif_ipc, type = "none"))
+```
+
+En este caso el estadístico t es menor a los valores críticos, por lo tanto se puede descartar con un nivel de confianza del 99% que la serie del IPC en diferencias no cuenta con raíces unitarias y por lo tanto la estimación de un modelo SARIMA puede ser realizada. El paso siguiente consiste en la estimación en la verificación de los órdenes AR(p) y MA(q) para la estimación del modelo SARIMA. 
+
+```{r ACF diferencias, fig.align="center", fig.height=3, fig.width=8, echo=FALSE}
+acf2<-ggAcf(dipc$dif_ipc, lag.max = 32) + labs(title="\nAutocorrelación diferencia IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+pacf2<- ggPacf(dipc$dif_ipc, lag.max = 32) + labs(title="\nAutocorrelación Parcial diferencia IPC") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf2, pacf2, ncol=2)
+```
+
+Del gráfico anterior se puede observar que el modelo a estimar contiene un fuerte comportamiento estacional puesto que cada 12 meses tanto en la autocorrelación y la autocorrelación parcial existen picos que indican la presencia del componente estacional. En lo que respecta a los componentes no estacionales, se determina según el gráfico que el modelo sería un $AR(1)$ y un $MA(2)$ con un orden de integración $I(1)$, debido a la diferenciación necesaria para alcanzar la estacionariedad del modelo. De esta forma el modelo a estimar quedaría de la siguiente forma: 
+
+\begin{equation}
+SARIMA(1,1,2)(0,1,1)[12]
+\end{equation}
+
+```{r, include=FALSE}
+serie_modelo<-ts(base$ipc, start = c(2003,7), frequency = 12)
+auto.arima(serie_modelo, seasonal = TRUE)
+
+```
+
+### Estimación del Modelo
+
+A continuación,  se presentan los resultados del modelo SARIMA para la predicción de la inflación mesual en el Ecuador. 
+
+#### Resultados del modelo 
+
+```{r Modelo1 }
+modelo1<-Arima(serie_modelo, order = c(1,1,2), seasonal = c(0,1,1), include.mean = FALSE, include.drift = FALSE, method = "ML")
+summary(modelo1)
+```
+
+<br>
+
+### Revisión de supuestos
+
+#### Estabilidad
+Los resultados del modelo evidencian que la parte $SMA(1)$ se encuentra muy cercana a uno por lo que podría contener una raíz unitaria, no obstante, al quitar este término de la ecuación los criterios de información AIC y BIC indican que no es bueno para el ajuste del modelo retirar estos términos. Por ello es necesario revisar la estabilidad de los parámetros del modelo con el gráfico de las raíces características del modelo SARIMA, el mismo que se presenta en la figura siguiente. Se observa que si bien varias de las raíces invertidas se encuentran cercanas al círculo unitario, todas se ubican dentro del círculo unitario.
+
+<br>
+
+```{r, fig.align="center", fig.height=3.5, echo=FALSE}
+autoplot(modelo1) + theme(legend.position = "bottom") + tema_camilo + labs(y="Imaginaria")
+```
+
+#### Autocorrelación
+Adicionalmente, es necesario revisar que los residuos de la estimación no presenten autocorrelación y sigan una distribución normal. En el gráfico siguiente se presentan los gráficos de autocorrelación y el histograma de la distribución de los residuos, donde adicionalmente se presentan los tests de jarque bera para analizar la normalidad y durbin watson para analizar la autocorrelación. 
+
+```{r, echo=FALSE, fig.width=8, fig.height=3, fig.align="center"}
+acf3<-ggAcf(residuals(modelo1), lag.max = 32) + labs(title="\nAutocorrelación Residuos ") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10)) 
+pacf3<-ggPacf(residuals(modelo1), lag.max = 32) + labs(title="\nAutocorrelación Parcial Residuos") + theme_pander() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+grid.arrange(acf3, pacf3, ncol=2)
+dwatson<-durbinWatsonTest(as.vector(residuals(modelo1)))
+paste("El valor del estadístico Durbin Watson es:", dwatson)
+```
+
+#### Normalidad
+Finalmente, es necesario revisar que se cumpla con el supuesto de normalidad. En primer lugar, el histograma de los residuos evidencia que se podría tratar de una distribución. Posteriormente, el test Jarque Bera confirma esta suposición, puesto que no se rechaza la Hipótesis Nula de normalidad al 95% de confianza. 
+
+```{r Normalidad, warning=FALSE, message=FALSE, echo=FALSE, fig.align="center", fig.width=6.5, fig.height=3.5}
+residuos<-residuals(modelo1)
+#ggplot(data = residuos, aes(x=seq(1:length(residuos)), y=residuos)) + geom_line() + geom_point() + tema_camilo
+ggplot(data = residuos, aes(residuos)) + geom_histogram(bins = 25, fill="mediumpurple4") + tema_camilo + labs(title="Distribución de los residuos", x="Residuos", y="Frecuencia")
+JarqueBera.test(residuos)
+```
+
+### Pronosticos de la inflación mensual en Ecuador
+
+Una vez revisado que se cumplen todos los supuestos necesarios para la estimación de un modelo SARIMA, se procede a obtener los pronóstiocs para la serie de la inflación mensual en el Ecuador. A la izquierda se encuentra el gráfico de la serie del IPC al nivel y en el gráfico de la derecha se encuentran los pronósticos para la inflación mensual. 
+
+<br>
+
+```{r, echo=FALSE}
+cuadro1<-hchart(forecast(modelo1, h = 12, level = 95))
+cuadro2<-hchart(forecast(Arima(diff(serie_modelo), order = c(1,0,2), seasonal = c(0,1,1), include.mean = FALSE, include.drift = FALSE, method = "ML"), h = 12, level = 95))
+hw_grid(cuadro1, cuadro2, ncol = 2)
+```
+
+Del gráfico anterior se puede concluir que los intervalos de confianza obtenidos son demasiado amplios, razón por la cual una estimación con métodos econométricos alternativos podría ser mucho más adecuada. 
