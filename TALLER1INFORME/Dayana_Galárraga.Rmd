@@ -1,0 +1,588 @@
+---
+title: "Deber_Rmarkdow_M1"
+author: "Dayana Galárraga"
+date: "14 de abril de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##R Como calculadora
+```{r}
+5+3
+15.3*23.4
+sqrt(16)# saca la raíz cuadrada 
+```
+##Creando y almacenando nombres
+```{r}
+producto = 15.3*23.4 #guarda los valores de las variables con un nombre 
+producto <- 15.3*23.4
+```
+######Una vez guardadas las variables se las puede utilizar en otras operaciones o funciones:
+```{r}
+log(producto)
+log10(producto)
+log(producto, base=2)
+```
+##Sugerencias
+#####(Para crear los registros)
++ Los nombres no pueden comenzar con un número.
++ Existen nombres reservados dentro del programa ("function", "if", etc).
++ Para relizar un comentario se utiliza "#"
++ Las comillas dobles -""- le dicen a R q algo es una cadena de caracteres.
++ Las asignaciones se hacen con "<-", y es mejor si existe un espacio a cada lado.
+
+#####Ejemplo:
+```{r}
+x<-1:5#mal estilo
+x <- 1:5#mejor presentación
+```
+##Generación de datos
+#####Secuencia de números enteros
+```{r}
+x <- 1:10 #se utiliza el operador":"
+```
+
+#####Secuencia de números reales
+```{r}
+seq(1, 5, 0.5) 
+```
+#####scan() se utiliza para ingresas valores
+```{r}
+z <- scan()
+```
+#####rep se utiliza para crear un vector con valores iguales.
+```{r}
+rep(1, 20)
+```
+##Funciones simples en R
+```{r}
+x <- (1:15)
+sum(x) #suma los elementos de x
+prod(x)#producto de los elementos de x
+max(x)#devuelve el máximo en el objeto x
+min(x)# devuelve el mínimo en el objeto x
+which.max(x)#devuelve el índice del elemento máximo
+which.min(x)# devuelve el índice del elemento mínimo
+```
+#####Creando una función
+```{r}
+f_x <- function(x){
+  y <- x^2
+  y
+}
+```
+##Importando datos en R
+#####Se debe fijar el directorio
+```{r}
+getwd()# devuelve el directorio actual
+```
+#####Los formatos para importación más usados son: 
++ Excel.xml(csv)
++ Stata.dta
++ SPSS.sav
+
+#####El comando setwd utiliza el directorio donde se esta almacenando los datos.
+```{r}
+setwd("G:/CURSO R/Deberes_R/Modulo 3")
+```
+##Trabajando con Excel
+#####Para abrir una hoja excel en R se debe guardar el mimsmo en formato CVS(delimidado por comas).
+```{r}
+Mundo <- read.csv("Mundo.csv", sep = ";", header = TRUE)# Para leer los datos en excel
+# header=TR se utiliza para que R lea a la primera fila con etiquetas 
+#se pone el nombre del archivo
+str(Mundo)# describe las variables del dataframe
+```
+##Números y Vectores
+*Vector*: Es un conjunto de elementos del mismo tipo
+"<- c()" se utiliza para crear vectores 
+```{r}
+x <- c(1, 2, 3); y <- c("a" ,"b" ,"Hola")
+z1 <- c(TRUE, TRUE, FALSE)
+X <- 9:29
+X <- c(1+0i, 2+4i)
+```
+#####Mezclando vectores
+```{r}
+y <- c(1,7, "a")
+```
+
+######Se puede cambiar la clase del objeto usando la función del tipo
+```{r}
+x <- 0:6
+class (x)#sirve para ver que tipos de datos tiene la variable  
+as.numeric(x)
+as.logical(x)
+as.complex(x)# imaginario
+```
+##Algebra de Vectores
++ Un vector columna es una lista de números agrupados uno sobre el otro
++ Un vector fila es una lista de números escritos uno después del otro
++ Los vectores en R se imprimen en fila, pero puden ser vistos como fila.
+```{r}
+a <- c(1,3,2)
+a
+```
+#####Trasponer vectores 
+```{r}
+t(a)
+```
+#####Multiplicación de un vector 
+```{r}
+7*a
+```
+#####Suma de vectores 
+```{r}
+a <- c(1,3,2)
+b <- c(2,8,9)
+a+b 
+```
+#####Producto interno de un vector 
+```{r}
+sum(a*b)
+```
+#####Raíz cuadrada de un vector 
+```{r}
+sqrt(sum(a*a))
+```
+##Indexación: Filtrar valores por la posición.
+#####Extrae los elementos 1 y 3 de (y) 
+```{r}
+y <- c(1.2, 3.9, 0.4, 0.12)
+y[c(1,3)]
+```
+#####Creando un filtro en otro vector
+```{r}
+v <- 3:4
+y[v]
+```
+#####Extrayendo duplicados
+```{r}
+x <- c(4, 2, 17, 5)
+y <- x[c(1, 1, 3)]
+y
+```
+#####El "-" se usa para excluir elementos
+```{r}
+z <- c(5, 12, 13)
+z[-1]
+z[-1:-2]
+```
+#####Otro ejemplo
+```{r}
+z[1:length(z)-1]
+z <- seq(1, 5, 0.5)
+z [1:length(z)-1]
+length(z)
+1:length(z)-1
+z[c(1,3)]
+x = c(1, 2, 3)
+y = c(3, 4)
+```
+##Matrices y Dataframes
++ Matrices: Solo puede contener una sola clase de datos 
++ Dataframe: Contienen varias clases de datos
++ Atributo "dim" 
+
+####Generación de un vector
+```{r}
+my_vector <- c(1:20)
+dim(my_vector)# le hago al vector matriz
+dim(my_vector) <- c(4, 5)#puedo darle la caracteristica a un vector para que se haga matriz y medir su dimensión
+my_vector
+class(my_vector)
+my_matrix <- my_vector
+```
+######Con el ejemplo anterior se ilustro que una matriz es simplemente un vector con un atributo de dimensión. Un método sencillo para la creación de un matriz es con la utilización de la función matrix().
+
+######Ejemplo: Se pide crear una matriz que contenga los mismos números (1-20) y dimensiones (4 filas, 5 columnas), usando la función matrix() y observar el resultado de la matriz anterior con la nueva.
+```{r}
+my_matrix <- my_vector
+my_matrix2 <- matrix(1:20, nrow = 4, ncol = 5)
+identical(my_matrix, my_matrix2)# se utiliza para poder ver la similitud de los datos
+dim(my_matrix2)
+```
+##Como etiquetar filas y columnas en una matriz
+#####Para ilustrar esta sección, vamos simular que la matriz anterior fue el resultado de algunas medidas de un experimento clinico, donde cada fila representa un paciente y cada columna es una variable para la que se tomaron mediciones.
++ Se comienza con la creación de un vector de caracteres que contenga los nombres de nuestros pacientes "Bill, Gina, Kelly y Sean", se almacena el resultados en la variable llamada **patientes**
++ Utilizamos la función **cbind()** para combinar columnas, se usan dos argumentos el vector de los pacientes y my_matrix.
++ Como R coacciona los numeros en carácteres se debe crear un data frame ya que como lo habiamos mencionado un "data frame" contien la convinacion de varias clases de datos por lo que ejecutamos la siguiente operación: **my_data <- data.frame(patients, my_matrix)**
++ Vemos que tipo de objeto hemos creado con la función class(my_data)
++ Se puede asignar filas y columnas a un data frame lo cual es otra posible forma de determinar qué fila de valores en nuestra tabla pertenece a cada paciente.
++ Como ya contamos con un vetor que contiene los nombres de los pacientes debemos crear un vector que contenga un elemento para cada columna que para este caso corresponde al nombre de **cnames** con los siguientes valores: *patient, age, weight, bp, rating, test*
++ Para finalizar utilizamos la fucnción **colnames()** para establecer el atributo *colnames* a nuestro data frame que es similar a la fucnión *dim()* que utilizamos anteriormente e imprimimos *my_data* para observar el resultado.
+
+#####El código sería:
+```{r}
+patients <- c("Bill", "Gina", "Kelly", "Sean")
+cbind(patients, my_matrix)# une matrices con respecto a columas
+my_data <- data.frame(patients, my_matrix)
+#data.frame= combina vectores de diferente tipo
+class(my_data)
+cnames <- c("patient", "age", "weight", "bp", "rating", "test")
+colnames(my_data) <- cnames
+my_data
+```
+##Creación de un data frame de forma directa
+```{r}
+my.data.frame <- data.frame(
+  ID = c("Carla", "Predro", "Laura"),
+  Edad = c(10, 25, 33),
+  Ingreso = c(NA, 34, 15),
+  Sexo = c(TRUE, FALSE, TRUE),
+  Etnia = c("Mestizo", "Afroecuatoriano", "Indígena")
+)
+my.data.frame
+```
+##Listas
++ Es un *vector generalizado*
++ Cada lista esta formada por componentes (que pueden pertencer a otras listas),
++ Los componente puede ser de distinto tipo. son unos "contenedores generalizados"
+```{r}
+A <- list("ID", "Edad", "Ingreso", "Sexo", "Etnia")# como crear una lista 
+my.data.frame
+A
+L1 <- list(c(1,2), "A", c(1,2,3))
+my.data.frame[2,3]
+my.data.frame[2, "Ingreso"]
+my.data.frame[[1]]
+my.data.frame[1]
+str(my.data.frame[[1]])
+L1[2]; L1[3]
+```
+
+##Opreaciones con matrices
++ R nos ofrece la facilidad de manipular datos y hacer operaciones con matrices.
++ Las funciones **rbind()** y **cbind()** unen matrices con respecto a sus filas o columnas.
+```{r}
+m1 <- matrix(1, nr = 2, nc = 2)
+m2 <- matrix(2, nr = 2, nc = 2)
+rbind(m1, m2)# une filas a la matriz
+cbind(m1, m2)# une columnas a la matriz
+```
++ El operador "%*%" nos ayuda a obtener el producto de dos matrices
+```{r}
+ma <- rbind(m1, m2) %*% cbind(m1, m2)
+ma
+```
++ La transpuesta de una matriz se realiza con la función **t**, esta función también funciona con data frames.
+```{r}
+t(ma)
+```
++ La función **det()** devuelve la determinante de una matriz
+```{r}
+det(ma)
+```
++ La función **solve()** devuelve la inversa de una matriz 
+```{r}
+A <- matrix(c(3,5,1,2,3,1,1,4,-1), ncol=3)
+b <- c(1,2,1)
+solve(A,b)
+```
+##Arrays
++ Generalización de vectores, elementos del mismo tipo
+```{r}
+x <- array(1:20, dim = c(4,5))
+x
+```
+##Factor 
++ Es un tipo de vector para datos categoricos
+```{r}
+z <- factor(LETTERS[1:3], ordered = TRUE)
+z
+x <- factor(c("a", "b", "b", "a"))
+x
+```
+######Se recomienda la utilización de "factores" cuando se conocen los valores posibles que una variable puede tomar, el uso de un factor en lugar de un vector de caracteres es evidente cuando algunos grupos no contienen observaciones:
+```{r}
+sex_char <- c("m", "m", "m")
+sex_factor <- factor(sex_char, levels = c("m", "f"))
+table(sex_char)
+table(sex_factor)
+```
+## Valores peridos(Missing Values)
+#####Los valores perdidos se denotan por *NA* o *NAN* en opraciones matemáticas no definidas.
+#####Códigos:
+```{r}
+x <- c(1, 2, NA, 10, 3)
+is.na(x)#Reconoce si un onbejeto es un valor perdido
+x <- c(1, 2, NA, 10, 3)
+is.nan(x)# se usa para comprobar si un objeto es NaN 
+```
+##Bucles 
+#####Se utiliza para repetir una operación determinado número de veces.
+```{r}
+x <- 1:5000
+y <- x^2
+```
+#####Con Bucles
+```{r}
+z=0 
+for(i in 1:5000) z[i] <- x[i]^2
+```
+##For
+##### Su sintaxis es: **for (i in valores){instrucciones}**
+```{r}
+for (i in 1:5)
+{print(i)}
+```
+#####Otros ejemplos:
+```{r}
+for(i in c(3, 2, 9, 6)){print(i^2)}
+medios.transporte <- c("carro", "camion", "metro", "moto")
+for(vehiculo in medios.transporte){print(vehiculo)}
+```
+##While an Repeat
++ Opción 1
+```{r}
+i <- 1
+while(i<=10) i <- i+4
+i
+```
++ Opción 2
+```{r}
+i <- 1
+while (TRUE){
+  i <- i+4
+  if (i>=10) break
+}
+i
+```
+##Else 
++ Ejemplo
+```{r}
+r=5
+if (r==4){
+  x <- 1
+}else{
+  x <- 3
+  y <- 4
+}
+r
+```
+#####Combianado lo aprendido 
++ .Realicemos una función que cuenta el número de elementos impares en un vector:
+```{r}
+oddcount <- function(x)# cuenta el número de elementos impares
+{
+  k <- 0#se asigna 0 a k
+  for(n in x)
+  {
+    if(n%%2 ==1) k <- k+1
+  }
+  return(k)
+}
+```
+#####Probamos la función
+```{r}
+x <- seq(1:3)
+oddcount(x)
+```
+##Ejercicio aplicado
+######Genere en R la formula del VAN aplicando todo lo aprendido
+```{r}
+VAN <- function(I0,n,K,V)
+{
+  for (i in 1:n)
+  {
+    y[i] <- V/(1+K)^i
+  }
+  sum(y) - I0
+}
+```
+##La Familia Apply
+#####Nos proporcionan mayor facilidad en algunas operaciones en lugar de utilizar *Loops*, entre estas tenemos:
++ **lapply:** Itera sobre una lista y evalúa una función en cada elemento.
++ **sapply:** Lo mismo que laaply pero trata de simplifica el resultado.
++ **apply:** Aplica una función sobre las dimensiones de un array.
++ **tapply:** Aplica una función sobre subconjuntos de un vector
++ **mapply:** Versión multivariada de lapply
+
+####Lapply
++ Retorna una lista , independiente de la clase de objeto 
+```{r}
+set.seed(314)#para obtener los mismos resultados 
+x <- list(a = 1:5, b = rnorm(10))
+x
+lapply(x, mean)
+
+x <- list(a =1:4, b = rnorm(10), c = rnorm(20, 1), d = rnorm(100, 5))
+lapply(x, mean)
+sapply(x, mean)# simplifica el resultado del lapply
+```
+####Apply
++ Es utilizado más en matrices.
++ .En general no es más rápido que un loop, pero cabe en una sola línea. 
+```{r}
+set.seed(314)
+x <- matrix(rnorm(200), 20, 10)
+apply(x, 2, mean)
+```
+####Tapply
++ Se usa para aplicar funciones sobre subconjuntos de un vector.
+```{r}
+x<- c(rnorm(10), runif(10), rnorm(10, 1))
+f <- gl(3,10)
+f
+tapply(x, f, mean)
+```
+##Agregate y By
+####By
++ Para ejecutar esta función, usaremos la base de datos InsectSprays.
+```{r}
+data(InsectSprays)
+InsectSprays$x <- rnorm(length(InsectSprays$count))
+by(InsectSprays, InsectSprays$spray, summary)
+# ?InsectSprays permite hacer un help
+#summary ---genera un resumen de indicadores estadísticos 
+```
+####Agregate 
+```{r}
+aggregate(InsectSprays[, -2], list(InsectSprays$spray), median)
+InsectSprays$spray=="A"
+InsectSprays[InsectSprays$spray=="A",]
+subset(InsectSprays, InsectSprays$spray=="A")#sacar un subgrupo 
+```
+##Funciones Gráficas
+######El resultado de una función gráfica no puede ser asigando a un objeto sino que es enviado a un dispositivo gráfico, es una ventana gráfica o un archivo.
+######Existen dos tipos de funciones gáficas:
++ Funciones de **gráficas de alto nivel:** Crean una nueva gráfica
++ Funciones de **gráficas de bajo nivel:** agregan elementos a una gráfica existente
+
+######Las gráficas se producen con respecto a parámetros gráficos que están definidos por defecto y pueden ser modificados con la función par.
+####Función plot(x)
+```{r}
+x <- seq(10,20,1)
+plot(x)
+y <- seq(30, 40, 1)
+plot(x,y)
+```
+
+####Boxplot: Gráfico de caja 
+```{r}
+boxplot(Mundo$PNB_PC)
+attach(Mundo)# sirve para fijar la base luego de abrirla
+boxplot(PNB_PC)
+```
+
+#####En general, si al aplicar el boxplot sobre una variable se tiene problemas para visualizarla, se debe usar el lograritmo de la variable para una mejor lectura de la variable.
+```{r}
+boxplot(log(PNB_PC))
+```
+
+#####Varios **boxplot** a la vez
+```{r}
+boxplot(log(PNB_PC)~REGION, col=rainbow(5))
+```
+
+#####Agreación de etiquetas
+```{r}
+fregion=factor(REGION, labels = c("Africa", "América", "Asia", "Europa", "Oceania"))
+boxplot(log(PNB_PC)~fregion, col=rainbow(5))
+```
+
+####Pie
++ Realiza un gráfico de PIE de los datos (tiene sentido cuando son datos de suma 100)
+```{r}
+z.pie <- c(20,40,10,30)
+pie(z.pie)
+```
+
+#####Con etiquetas
+```{r}
+names(z.pie) <- c("Soltero", "Casado", "Viudo", "Divorciado")
+pie(z.pie)
+```
+
+#####Con colores elegidos
+```{r}
+pie(z.pie, col = c("purple", "violetred1", "green3", "cornsilk"))
+```
+
+##Funciones Gráficas de bajo nivel
+####Curve
++ Sirve para graficar funciones
+```{r}
+curve(x^3-3*x,-2,2)
+```
+
+####Ejercicio 1:
++ Haga una gráfica de la función \(cos(3x)\) de \(0\) a \(3\), de color azul. Superponga la gráfica de \(sin(2x)\) de color rojo. La gráfica debe lucir así:
+```{r}
+curve(cos(3*x), 0, 3, col = "blue")
+curve(sin(2*x), 0,3, col = "red", add = TRUE)
+```
+
+####Ejercicio 2:
+```{r, eval=FALSE}
+library(rgl)#instalar 
+r <- 1 # radio de las esfera
+a <- runif(1000, 0, 2*pi)
+u <- runif(1000, -r, r)#diametro de la esfera
+x <- cos(a)*sqrt(1-u^2)
+y <- sin(a)*sqrt(1-u^2)
+z <- u
+plot3d(x, y, z, col = "blue")
+```
+
+##Funciones Gráficas de alto nivel 
+####ggplot2
+```{r, eval=TRUE}
+library(ggplot2)
+data(diamonds)
+```
+#####Gráfico básico 
+```{r}
+plot(diamonds$carat, diamonds$price, col = diamonds$color, pch = as.numeric(diamonds$cut))
+```
+
+#####Usando *ggplot*:
+```{r}
+ggplot(diamonds, aes(carat, price, col = color , shape = cut)) +
+  geom_point()
+```
+
+##Práctica 1
+```{r, include=FALSE}
+library(TeachingSampling)# Sirve para realizar muestreo probabilistico
+```
+
+#####Supongamos una muestra finita de N=5
+```{r}
+U <- c("riky", "caro", "camilo", "rosa", "santy")
+N <- length(U)
+```
+#####El tamaño de la muestra es n=2
+```{r}
+n <- 2
+```
+#####Cálculo del soporte
++ Viene esclusivamente de la variable aleatoriadonde la variable no se anula y toma valores
+```{r}
+Support(N,n)
+Support(N, n, U)
+```
+#####p es la probabilidad de seleccion de cada muestra
+```{r}
+p <- c(0.13, 0.2, 0.15, 0.1, 0.15, 0.04, 0.02, 0.06, 0.07, 0.08)
+#Note que los elementos suman 1 y ninguno es negativo
+sum(p)
+```
+##Práctica 2:
++ Crear 10 posibles muestras
+```{r}
+Ind <- Ik(N,n)
+Q <- Support(N, n, U)
+data.frame (Q, p, Ind)
+```
+#####Se calcula la probabilidad de inclusión
+```{r}
+multip <- p*Ind
+colSums(multip)
+
+pik <- Pik(p, Ind)
+sum(pik)
+```
