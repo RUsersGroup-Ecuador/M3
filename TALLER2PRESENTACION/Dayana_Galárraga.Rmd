@@ -1,0 +1,66 @@
+---
+title: "Modelo de Regresión lineal"
+author: "Dayana Galárraga"
+date: "14 de abril de 2018"
+output: ioslides_presentation
+---
+
+#Modelo de Regresión lineal Simple
+getwd()
+setwd("J:/CURSO R/Deberes_R/Modulo 3")
+base_empleados <- read.csv("Empleados.csv", sep = ";", header = TRUE)
+str(base_empleados)
+attach(base_empleados)
+
+#Diagrama de dispersión peso vs altura 
+plot(Peso~Altura, axes = TRUE)# Relación entre las variables 
+
+#Función de regresión
+Modelo1 <- lm(Peso~Altura)
+summary(Modelo1)
+names(Modelo1)
+Modelo1$coefficients
+
+# Diagrama de dispersión con recta ajustada
+plot(Peso~Altura, xlab="Altura", ylab="Peso",pch=16)
+abline(Modelo1, col = "blue")
+
+# Residuos y Estimación de la varianza del error
+Residuos1 <- Modelo1$residuals
+n <- length(Altura)
+sum(Modelo1$residuals^2)/(n-2)
+Residuos2 <- rstandard(Modelo1)
+valores.ajustados <- fitted(Modelo1)
+plot(valores.ajustados, Residuos2)
+qqnorm(Residuos2)
+qqline(Residuos2)
+                            
+# IC para los parámetros al 95%
+confint(Modelo1, level = 0.95)#intervalo de confianza para los coeficeinte
+plot(Residuos1~Altura)
+
+#Nubes de puntos
+plot(base_empleados$Altura, base_empleados$Peso, main = "Nube de puntos y ajuste", xlab = "Altura", ylab = "Peso")
+abline(Modelo1, col="purple")
+lines(lowess(base_empleados$Altura, base_empleados$Peso), col = "blue")
+
+#Gráficos
+par(mfrow=c(2,2))
+plot(Modelo1)
+par(mfrow=c(1,1))
+
+#test para los residuos 
+library(lmtest)
+Box.test(Modelo1$residuals, lag = 1, type = "Ljung-Box")
+#dwtest(Peso~Altura, alternative = "two.sided")#test de Durbin Whatson
+shapiro.test(Modelo1$residuals)
+
+anova(Modelo1)
+#Modelo de Regresión Múltiple
+hist(Peso)
+hist(log(Peso))
+Modelo2 <- lm(log(Peso)~Altura+Edad+Sexo, data = base_empleados)
+summary(Modelo2)
+hist(Modelo2$residuals)
+Prediciones <- predict(Modelo2, interval = "confidence")
+plot(Prediciones)
