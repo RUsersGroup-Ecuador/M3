@@ -1,0 +1,27 @@
+title: "Trabajo de regresión lineal_Edwin Jacome"
+author: "Edwin Jacome"
+date: "13 de abril de 2018"
+output: html_document
+---
+```{r}
+getwd() 
+setwd("C:/Users/Claro/Desktop")
+accidentes <- read.csv("Acc17.csv", sep=";", header=TRUE)
+accidentes
+attach(accidentes); Attsv2017
+#detach(accidentes)
+str(accidentes)
+View(accidentes)
+boxplot(Attsv2017)
+y <- boxplot(Attsv2017)
+names(y)
+y$out
+y$out %in% Attsv2017 #operacion logical
+which(Attsv2017 %in% y$out)# devuelve las posiciones de los valores atipicos
+#OPCION 1
+filtro <- Attsv2017 %in% y$out;filtro
+Attsv2017[filtro]
+summary(Attsv2017)
+#opcion 2
+(ind <- which(filtro))
+Attsv2017[ind]
