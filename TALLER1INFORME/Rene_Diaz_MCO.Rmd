@@ -1,0 +1,207 @@
+---
+title: "Modelo de regresión lineal múltiple"
+author: "Elaborado por: René Díaz Flores"
+output: html_document
+---
+
+###Objetivos 
+
+- Aplicar el Modelo de Regresión Lineal Múltiple a un conjunto de datos ficticios en el software R.studio.
+
+- Diagnosticar si el modelo cumple con todos los test estadísticos. 
+
+###Introducción 
+
+La Disquera Rockola, líder en el mercado musical, ha solicitado a su departamento de marketing, un estudio que permita evaluar el desempeño de las ventas de los discos de rock, que se efectuaron el año 2017, a nivel nacional. 
+
+Para este fin, el área de marketing cuenta con una base de datos que contiene la siguiente información:  
+
+- Venta de discos
+- Gasto en Publicidad  
+
+Sin embargo, para realizar un estudio más robusto, el departamento de marketing, ha
+pedido a las principales radios del país, un informe donde se evidencie el tiempo que
+cada estación radial dedica al rock y en especial a los grupos de rock que la Disquera
+Rockola está promocionando. Asimismo, otro elemento que se ha tomado en
+consideración al momento de elaborar el estudio, es la construcción de una encuesta,
+donde se ha consultado a las personas (en especial a aquellas en el rango de edad de
+los 15 hasta los 35 años) el nivel de agrado que tienen sobre ciertos grupos de rock.  
+
+###Informe
+
+Con todos estos elementos antes mencionados, el área de Marketing elaborará un 
+modelo de regresión lineal múltiple, en el cual se desea observar el comportamiento de
+las ventas de los discos de rock, por medio de las variables explicativas: Gasto en
+publicidad, tiempo en que cada disco ha estado en el aire y nivel de agrado por los
+grupos de rock. 
+
+A continuación, se describirá cada variable con su respectiva unidad de medida,
+denotando a la variable dependiente, ventas de discos, con la letra $y_{i}$, mientras que a cada variable independiente con la letra $x_{i}$.
+
+*$y_{i}$=Venta de discos de rock,expresada en miles de discos*
+
+*$x_{1}$=Gasto en publicidad de cada disco de rock,expresado en miles de dólares*
+
+*$x_{2}$=Número de veces que las canciones fueron puestas en el aire en las principales radios del país*
+
+*$x_{3}$=Nivel de preferencia por los grupos de rock,clasificado de la escala del 1 al 10, donde 1 es clasificado como desagradable,mientras que 10 como atractivo.*
+
+De este modo la ecuación que se requiere estimar por medio del modelo de regresión
+lineal múltiple tiene la siguiente forma funcional:
+
+$y_{i}$=$\beta_{0}$+$\beta_{1}$.$x_{1i}$+$\beta_{2}$.$x_{2i}$+$\beta_{3}$.$x_{3i}$+$\mu_{i}$   (1)
+
+Donde:
+
+$\beta_{0}$= representa el intercepto
+
+$\beta_{1}$= el coeficiente del predictor $x_{1i}$
+
+$\beta_{2}$= el coeficiente del predictor $x_{2i}$
+
+$\beta_{3}$= el coeficiente del predictor $x_{3i}$
+
+$\mu_{i}$  = término de error inobservable
+
+Una vez que se ha identificado tanto la variable dependiente como las variables
+explicativas, se procederá a efectuar el modelo de regresión lineal múltiple por medio
+del software estadístico R-studio. Cabe resaltar que el estudio analiza una muestra de
+200 bandas de rock, en el periodo comprendido entre enero hasta diciembre del año
+2017. 
+
+###Interpretación de Resultados
+
+El primer estadístico a examinar será el R cuadrado y el R cuadrado ajustado; ambos 
+estadísticos proporcionan información acerca de la variación de la variable dependiente (en este caso la venta de los discos), que es explicada por el conjunto de variables explicativas. En el presente estudio, tanto el R cuadrado como el R cuadrado ajustado superan el 65%, lo cual indica que el 65% de la variación de las ventas, es explicado por el gasto en publicidad, tiempo en que las emisoras colocan al aire a los grupos musicales de rock que promociona la disquera y el nivel de preferencias que las personas tienen sobre dichos grupos.  
+
+En términos generales, se aconseja elegir como medida de bondad de ajuste al R
+cuadrado ajustado sobre el R cuadrado, debido a que este último suele tener un
+comportamiento optimista al ajuste de la regresión lineal, es decir, a medida que se
+agregan más variables explicativas al modelo, el estadístico R cuadrado también se
+incrementa, sin importar si las variables explicativas adicionales tengan algún grado de correlación con la variable dependiente.  En este sentido, el R cuadrado ajustado corrige la estimación excesiva producida por el R cuadrado. 
+
+```{r echo=FALSE}
+#Abrir la base
+library(readxl)
+ventas <- read_excel("ventas.xlsx")
+```
+
+**Tabla No1: Modelo de Regresión Lineal Múltiple**
+```{r echo=FALSE}
+regresion <- lm(ventas ~ gastos+tiempo+preferencias, data=ventas)
+summary(regresion)
+```
+
+Por otra parte, los coeficientes estimados se presentan en la tabla No1, donde como se
+puede observar todos los coeficientes tienen valores mayores a cero, lo cual indica una relación positiva entre los predictores y la variable dependiente, es decir a medida que el gasto en publicidad se incrementa, las ventas de los discos también aumentan; el análisis es análogo para el resto de variables.  
+
+Cabe definir ahora, la interpretación de dichos parámetros. En este aspecto, en relación a los gastos en publicidad, un incremento de un dólar en el presupuesto destinado a la publicidad, provoca un incremento de 0.085 unidades de discos vendidos, manteniendo tanto las variables de tiempo y preferencias constantes. Es preciso recordar, que, al inicio del informe, se estableció que tanto la venta de discos como el gasto de publicidad está expresado en miles de discos y dólares respectivamente, por lo tanto, para tener una interpretación más realista, se podrá manifestar que, a medida que el gasto en publicidad se incrementa en 1000 dólares, la venta de discos se incrementa en 85 unidades, manteniendo el resto de variables constantes.         
+
+En cuanto al número de veces que las emisoras radiales ponen las canciones al aire, el
+número de discos vendidos ascienden a 3.367 unidades. Sin embargo, al tratarse de
+ventas expresadas en miles, esto implica un incrementó igual a 3 367 unidades vendidas, manteniendo el resto de variables constantes. 
+
+Para finalizar, si una banda obtiene una calificación más alta en relación al nivel de
+preferencia que recae sobre ellos, el número de ventas de los discos se incrementa en
+11086 álbumes, y al igual que los casos anteriores, manteniendo el resto de variables
+constates. 
+
+De este modo la ecuación descrita en la ecuación No1, ahora tiene la siguiente estructura:
+
+$ventas_{i}$=$\beta_{0}$+$\beta_{1}$.$gastos_{1i}$+$\beta_{2}$.$tiempo_{2i}$+$\beta_{3}$.$preferencias_{3i}$+$\mu_{i}$
+
+$ventas_{i}$=$-26.61$+$0.08$.$gastos_{i}$+$3.37$.$tiempo_{i}$+$11.09$.$preferencias_{i}$+$\mu_{i}$
+
+Además, cada estimador está asociado a un error estándar, el cual es un indicador de 
+cuan representativa la muestra será de la población. En este sentido, un pequeño error
+estándar revela que gran parte de la media muestral representa un comportamiento
+similar a la media poblacional. En el caso del presente estudio, los errores estándares son pequeños, lo cual es una señal de que la muestra es representativa.  
+
+Otro indicador que es preciso revisar, es el estadístico t; el cual indica si los valores de los parámetros $\beta$ estimados son diferentes de cero (o desde otra perspectiva, este estadístico señala si los predictores realmente producen una contribución al modelo).
+
+Por lo tanto, si el estadístico t asociado con los valores de $\beta$ es significativo (esto se produce cuando la probabilidad asociada al estadistico t es menor que 0.05), se concluye que los predictores son estadísticamente significativos. 
+
+En el caso del gasto en publicidad, el valor del estadístico t es igual a 12.261 con una probabilidad menor a 0.01, un valor similar del estadístico t presenta la variable tiempo, con un valor igual a 12.123 y probabilidad menor al 0.01. Por otro lado, la variable preferencia por los grupos de rock, también es estadísticamente significativo, con valor del estadístico t igual a 4.548 y una probabilidad
+menor a 0.01.  
+
+Con la magnitud del estadístico t se puede observar que tanto el gasto en publicidad
+como el tiempo, tienen un impacto similar sobre la venta de discos, mientras que las
+preferencias tienen un impacto menor.                         
+
+Los resultados de los intervalos de confianza se ilustran en la tabla No2, donde al 95% del nivel de confianza estos intervalos contendrán el verdadero valor de los Betas
+estimados. Por otro lado, se asegura que un buen modelo está caracterizado por tener
+intervalos de confianza pequeños, por el contrario, un modelo mal especificado tendrá,
+intervalos de confianza muy grandes, así como también, intervalos de confianza que
+crucen el valor de cero. Esto es un indicio de que, en algunas muestras, el predictor
+tendrá una relación negativa con el resultado, mientras que en otras muestras tendrá
+un valor positivo.  
+
+En relación al modelo analizado, tanto el gasto en publicidad, como el tiempo que las
+emisoras radiales destinan en colocar las canciones de rock al aire, poseen intervalos de confianza cortos, señal de que las estimaciones son representativas de los verdaderos valores poblacionales. Sin embargo, el intervalo de confianza para la variable "preferencia" es bastante amplio, lo cual demuestra lo que se había expresado
+previamente, en que esta variable era la menos representativa de las dos variables
+anteriores.
+
+**Tabla No2: Intervalos de confianza**
+```{r echo=FALSE}
+confint(regresion)
+```
+
+###Evaluación el modelo de regresión
+
+Una vez que se ha efectuado el análisis de regresión lineal múltiple para determinar el comportamiento de la variable venta de discos, en función de un conjunto de variables explicativas (gasto en publicidad, tiempo y preferencias), se deberá ahora, examinar si los supuestos detrás del modelo de regresión se cumplan: No multicolinealidad, homocedasticidad, independencia de los errores, distribución normal de los errores,independencia y linealidad. La importancia del cumplimiento de los supuestos antes mencionados, implicaría que los resultados arrojados por el modelo puedan aplicarse con mucha precisión a la población de interés.   
+
+####Supuesto No1: Independencia
+
+Para verificar que los errores son independientes entre observaciones, se aplica el test  Durbin- Watson.  Este test puede variar entre 0 y 4, donde un valor cercano a 2 significa que los residuos no están correlacionados, por otro lado, un valor superior a 2 indica una correlación positiva entre errores subyacentes, mientras que un valor menor a 2 representa una correlación negativa entre errores.   Revisando la informacion desplegada en la tabla No3, se observa que el valor del estadístico Durbin Watson es cercano a 2, información confirmada con el p-valor de 0.748
+
+**Tabla No3:Test Durbin-Watson**
+```{r echo=FALSE}
+library(car)
+dwt(regresion) 
+```
+
+####Supuesto No2: Multicolinealidad 
+
+La multicolinealidad se produce cuando existe una fuerte correlación entre las variables explicativas o cuando existe una perfecta combinación lineal entre ellas. Una de las consecuencias de la multicolinealidad radica en la dificultad de efectuar una evaluación de la importancia que tiene cada predictor.   
+
+El método para detectar la presencia de multicolinealidad es por medio del factor de
+inflación de la varianza (VIF por sus siglas en inglés). Dicho estadístico, indica si un predictor tiene una fuerte relación lineal con otro predictor. La literatura especializada, considera que, si el valor del VIF es mayor a 10, probablemente exista un problema de multicolinealidad, asimismo considerando el promedio de este indicador, si el mismo es mayor que 1, la multicolinealidad posiblemente genera un problema de sesgo en el modelo de regresión. 
+
+Además, un estadístico adicional, que está relacionado con los anteriores, es el estadístico de la tolerancia, que se lo representa como la razón entre 1/VIF. Si este valor se encuentra por debajo 0.1, existiría un problema de multicolinealidad.  
+
+Revisando la información de la tabla No4, se evidencia que tanto los valores VIF como del estadístico de tolerancia cumple los parámetros establecidos, por lo cual se concluye que no existe multicolinealidad.
+
+***Tabla No4:Test para detectar multicolinealidad***
+```{r echo=FALSE}
+vif(regresion)
+1/vif(regresion)
+mean(vif(regresion))
+```
+
+####Supuesto No3: Residuos
+
+Para finalizar con el análisis de los supuestos subyacentes al modelo de regresión lineal múltiple, se deberá considerar el supuesto de la distribución normal de los residuos (errores). Para este fin, se deberá graficar los residuos estandarizados (en el eje y) versus los valores ajustados (en el eje x), con esto se determinará si el supuesto de errores aleatorios y de homocedasticidad se cumple.  En el gráfico No1 se puede observar la dispersión de los puntos distribuidos uniformemente alrededor del cero, siendo esta una señal de que tanto los supuestos de linealidad (la relación existente entre la variable dependiente e independiente son lineales) y homocedasticidad (varianza de los errores constantes) se cumple.
+
+```{r echo=FALSE}
+ventas$ajustados <- regresion$fitted.values
+ventas$resi.stu  <- rstudent(regresion)
+```
+
+***Gráfico No1:Residuos versus los valores ajustados del modelo***
+```{r echo=FALSE}
+library(ggplot2)
+library(extrafont)
+dispersion <- ggplot(ventas, aes(ajustados, resi.stu))
+dispersion + geom_point() + geom_smooth(method = "lm", colour = "Blue")+ labs(x = "Valores ajustados", y = "Studentized Residual") 
+```
+
+Otro gráfico que nos permite visualizar y examinar si una variable tiene una distribución normal, es el gráfico Q-Q plot, el cual grafica los valores acumulados de la variable versus la probabilidad acumulada de la distribución normal. En este sentido, cada valor es contrastado con el valor esperado de que el resultado sea una distribución normal. En el caso del presente estudio, se analiza los residuos observados y se los grafica por medio del diagrama Q-Q plot. En esencia si
+los errores tienen una distribución normal, los mismos formaran una línea diagonal recta, misma que se evidencia en el gráfico No2, por lo tanto, los errores tienen una distribución normal. 
+
+***Gráfico No2: Q-Q plot***
+```{r echo=FALSE}
+qqplot.resid <- qplot(sample = ventas$resi.stu, stat="qq") + labs(x ="Valores teóricos", y = "Valores observados")  
+qqplot.resid
+```
+
+Una vez que se ha revisado que todos los supuestos inherentes al modelo de regresión lineal múltiple se han cumplido, se puede concluir que el modelo previsto para la muestra puede ser generalizable para la población. Asimismo, y a la luz de los resultados visto en las secciones anteriores, se concluye que el gasto en publicidad, y el tiempo que las emisoras colocan las canciones al aire son igual de importantes para predecir las ventas de los discos.  Por otro lado, a pesar de que la variable, preferencia por los grupos de rock, fue estadísticamente significativo, tuvo un menor impacto en relación a las dos variables antes mencionadas.
