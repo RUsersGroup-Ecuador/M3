@@ -1,0 +1,99 @@
+---
+title: "MODELAMIENTO"
+author: "Nathan"
+date: "April 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **INFORME DE MODELAMIENTO**
+
+Declaraci�n del problema: Se han recopilado datos de ventas de productos en 10 tiendas en diferentes ciudades. Adem�s, se han definido ciertos atributos de cada producto y tienda. El objetivo es observar el comportamiento de las ventas de cada producto en una tienda en particular.
+Se tiene una base con 443 registros correspondientes, a los cuales las caracter�sticas como el peso del producto y las ventas en diferentes tiendas y se tiene los siguientes productos. 
+
+## Carga de datos 
+
+
+
+```{r cars}
+setwd("G:/RData/")
+data <- read.csv("train.csv",sep = ",",header = TRUE,dec = ".") 
+View(data)
+#Propiedades de los productos y las tiendas tiendas que desempe�an 
+attach(data)
+mytable1 <- with(data ,table(Item_Type))
+mytable1
+
+```
+Se procede a realizar un histograma para observar la distribuci�n que poseen los datos.
+En el caso de la variable ventas nos indica que su distribuci�n es sesgada a la izquierda con respecto a la distribuci�n normal, en conclusi�n podr�amos considerar que la variable no sigue una distribuci�n normal.
+
+```{r pressure, echo=FALSE}
+hist(Item_Outlet_Sales ,main="Distribuci�n de ventas",xlab = "ventas")
+```
+
+En el caso de la variable MRP podemos concluir que la variable no sigue una distribuci�n normal.
+
+
+```{r MRB, echo=FALSE}
+plot( log(Item_MRP)~log(Item_Outlet_Sales), data = data, xlab="Ventas", ylab = "MRP")
+```
+
+## Correlaci�n entre las variables MRP y Ventas:
+
+```{r cor, echo=FALSE}
+cor(Item_MRP,Item_Outlet_Sales)
+```
+
+Se puede observar que la correlaci�n entre el MRB y las ventas  es del 0.60 por lo que podemos asegurar que las variables est�n medianamente relacionadas o que poseen una relaci�n directa.
+
+```{r mdo3, echo=FALSE}
+mod3 <- lm(Item_MRP~Item_Outlet_Sales)
+summary(mod3)
+```
+Se ha obtenido la estimaci�n de la ordenada en el origen igual a 94.35 y de la pendiente igual a 0.021, mediante el ajuste un modelo lineal.
+Como era de esperarse la mayor cantidad de ventas se concentra en los supermercados que en las peque�as tiendas de comestibles, adem�s podemos visualizar si tenemos datos at�picos.
+
+
+```{r boxplot, echo=FALSE}
+plot( Item_Outlet_Sales~Outlet_Type, data = data, main = "Ventas vs tipo tienda", 
+         xlab = "Tipo de tienda", ylab = "Ventas")
+```
+
+```{r mod5, echo=FALSE}
+library(lattice)
+xyplot( Item_Outlet_Sales~ Item_MRP| Item_Fat_Content, data =data, type =c("p" , "r "),
+        main="Digrama de dispersic�n de las variables Ventas y MRP por contenido de grasa", 
+        xlab="Ventas",ylab="MRP")
+```
+
+```{r summarymod5, echo=FALSE}
+library(lattice)
+mod5 <- xyplot( Item_Outlet_Sales~ Item_MRP| Item_Fat_Content, data =data, type =c("p" , "r "),
+        main="Ventas y MRP por contenido de grasa", 
+        xlab="Ventas",ylab="MRP")
+
+summary(mod5)
+```
+Se puede identificar que existe una relaci�n lineal positiva entra las variable Ventas vs MRP.
+Se ha detectado valores at�pico es decir valore donde el MBP influye mucho en las ventas de los producto.
+Las distribuciones de las variables MRP y ventas son sesgadas haca la derecha y aun discriminado por visibilidad siguen teniendo la misma distribuci�n.
+
+```{r summarymod3, echo=FALSE}
+mod3 <- lm(Item_MRP~Item_Outlet_Sales-1)
+summary(mod3)
+par(mfrow=c(1,4))
+plot(mod3)
+anova(mod3)
+```
+
+
+
+
+
+
+
+
