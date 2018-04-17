@@ -1,0 +1,105 @@
+setwd("C:/Users/Galo/Desktop/STALIN")
+datos.suicidio <-read.csv("SUICIDIO.csv", sep=";", header = TRUE,
+                          dec = ",")
+
+str(datos.suicidio) 
+
+
+datos.suicidio$AÑOS <- as.character(datos.suicidio$AÑOS)
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+ui <- fluidPage(
+  tabsetPanel(type = "tabs",
+              tabPanel("PRIMERO",
+                       sidebarLayout(
+                         sidebarPanel(
+                           sliderInput("n",
+                                       "Registros", min = 1, max = 10000, value = 10),
+                           selectInput("variable","Seleccione la variable:",
+                                       choices = names(datos.suicidio)[-c(15:17)],selected = "SUICIDIOS"),
+                           
+                           tableOutput("tabla_resumen")
+                         ),
+                         mainPanel(
+                           tabsetPanel(type ="pills",
+                                       tabPanel("Tabla",dataTableOutput("tabla"),
+                                                downloadButton("descarga","Descargar")
+                                       ),
+                                       tabPanel("Grafico",
+                                                conditionalPanel(condition = 'input.variable!="DESEMPLEO"',
+                                                                 highchartOutput("grafico")                 
+                                                )
+                                       )
+                           )
+                         )
+                       )
+              ),
+              tabPanel("SEGUNDO",
+                       h3("Consulta de PAISES"),
+                       textInput("pais", "ingresos al PAISES"),
+                       actionButton("buscar", "BUSCAR"),br(),br(),br(),
+                       textOutput("resultado"),br(),
+                       tableOutput("resultado2"),br(),
+                       verbatimTextOutput("resultado1")
+              ),
+              tabPanel("TERCERO",
+                       selectInput("pais", "Seleccione lOS PAISES", 
+                                   choices = datos.suicidio$PAISES)
+              )
+  )
+)
+
+
+server <- function(input, output) {
+  
+  buscado <- eventReactive(input$buscar,{
+    if(is.na(as.numeric(input$pais))==F & 
+       nchar(input$pais)==13) {
+      datos.suicidio %>% filter(PAISES==input$pais)
+    } else {
+      datos.suicidio.frame(0)
+    }
+  })
+  
+  
+  output$resultado <- renderText({
+    
+    ifelse(nrow(buscado())==1,
+           paste("El PAIS buscado corresponde a",buscado()$PIB),
+           "PAIS no encontrado")
+  })
+  
+  output$resultado2 <- renderTable({
+    buscado()[,-which(names(buscado())=="AÑOS")] 
+  })
+  
+  AÑOS <- reactive(buscado()$AÑOS)
+  
+  output$resultado1 <- renderText(paste("AÑOS del PAISES",AÑOS()))
+  
+  output$descarga <- downloadHandler(
+    filename = function() {"datos.suicidio.csv"},
+    content = function(file){
+      write.csv2(datos.suicidio, file)
+    })
+  
+  #output$tabla <- renderDataTable({
+  # datos.suicidiotable(head(datos.suicidio[,c("PAISES", "PIB",input$variable)],input$n),
+  #    extensions = 'Buttons', options = list(
+  #   dom = 'Bfrtip',
+  #   buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  # ))
+  # })
+  
+  output$tabla_resumen <- renderTable({
+    table(datos.suicidio[, c(input$variable)])
+    #group_by(datos.suicidio,input$variable) %>% summarize(Numero=n())
+  })
+  output$grafico <- renderHighchart({
+    hchart(datos.suicidio[c(1:input$n),c(input$variable)], colorByPoint = TRUE, name = "variable")
+    #group_by(datos.suicidio,input$variable) %>% summarize(Numero=n())
+  })
+}
+shinyApp(ui = ui, server = server)
