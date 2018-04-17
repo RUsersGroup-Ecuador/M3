@@ -1,0 +1,110 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+#load(url("https://github.com/RUsersGroup-Ecuador/M3/raw/master/data2.Rdata"))
+getwd() 
+setwd("C:/Users/Claro/Desktop")
+data=read.csv("Transferencias GAD.csv", sep=";", header=TRUE)
+str(data)
+data$montoA14 <- as.character(data$montoA14)
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+ui <- fluidPage(
+  titlePanel("TRANSFERENCIASGAD"),
+  tabsetPanel(type = "tabs",
+              tabPanel("Principal",
+                       sidebarLayout(
+                         sidebarPanel(
+                           sliderInput("n",
+                                       "Registros",min = 1,max = 30,value = 10),
+                           selectInput("variable","Seleccione la variable:",
+                                       choices = names(data)[-c(1:3,6,7,10)],selected = "GADMunicipal"),
+                           
+                           tableOutput("tabla_resumen")
+                         ),
+                         mainPanel(
+                           tabsetPanel(type ="pills",
+                                       tabPanel("Tabla",dataTableOutput("tabla"),
+                                                downloadButton("descarga","Descargar")
+                                       ),
+                                       tabPanel("Grafico",
+                                                conditionalPanel(condition = 'input.variable!="montoB14"',
+                                                                 highchartOutput("grafico")
+                                                )
+                                       )
+                           )
+                         )
+                       )
+              ),
+              tabPanel("Secundario",
+                       h3("Monto del municipio"),
+                       textInput("montoA14", "Ingrese el GAD Municipal"),
+                       actionButton("buscar", "BUSCAR"), br(),br(),br(),
+                       textOutput("resultado"),br(),
+                       tableOutput("resultado2"),br(),
+                       verbatimTextOutput("resultado1")
+              ),
+              tabPanel("Tercero",
+                       selectInput("montoB16", "seleccione el GAD", 
+                                   choices = data$GADMunicipal)
+              ))
+)
+
+server <- function(input, output){ 
+  
+  buscado <- eventReactive(input$buscar,{
+    if(is.na(as.numeric(input$monto))==F &
+       nchar(input$monto)==13) {
+      data %>% filter(MONTO==input$monto)
+    } else {
+      data.frame(0)
+    }
+  })
+  
+  output$resultado <- renderText({
+    #input <- list(0)
+    #input$ruc <- "1111111111111"
+    
+    ifelse(nrow(buscado())==1,
+           paste("El MONTO buscado corresponde a", buscado()$GADMunicipal),
+           "MONTO no encontrado")
+  })
+  
+  output$resultado2 <- renderTable({
+    buscado()[,-which(names(buscado())=="montoA14")]
+  })
+  montoA14 <- reactive(buscado()$montoA14)
+  
+  output$resultado1 <- renderText(montoA14())
+  
+  output$descarga <- downloadHandler(
+    filename = function() {"data.csv"},
+    content = function(file){
+      write.csv2(data, file)
+    })
+  
+  output$tabla <- renderDataTable({
+    datatable(head(data[,c("MONTO", "GADMunicipal",input$variable)],input$n),
+              extensions = 'Buttons', options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+              ))
+  })
+  
+  output$tabla_resumen <- renderTable({
+    table(data[, c(input$variable)])
+    #group_by(data,input$variable) %>% summarize(Numero=n())
+  })
+  output$grafico <- renderHighchart({
+    hchart(data[c(1:input$n), c(input$variable)], colorByPoint = TRUE, name = "variable")
+    #group_by(data,input$variable) %>% summarize(Numero=n())
+  })
+}
+shinyApp(ui = ui, server = server)
