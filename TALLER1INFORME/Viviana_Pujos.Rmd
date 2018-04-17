@@ -1,0 +1,91 @@
+---
+title: "Informe"
+author: "vp"
+date: "13 de abril de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+load(url("https://github.com//vivianaPujos//dat//raw//master//ESI_2015.RData"))
+```
+
+## Entradas a Ecuador de no residentes en Ecuador
+
+El registro de entradas de personas no residentes en Ecuador a Ecuador lo presentamos en este informe distribuidas por motivo que esta visitando Ecuador, posteriormente haremos enfasis a las entradas por turismo, tratando de enmarcar los resultados en verificar que la visita de extrangeros a nuestro país es justamente por turismo la mayor parte. 
+
+En el siguinte detalle podemos evidenciar que al menos el 70% de las personas que ingresan a Ecuador es por turismo.
+
+```{r ESI_2015, include=FALSE}
+Resumw2= ESI_2015 %>% filter(tip_movi=="Entrada",pais_res!="Ecuador") %>% group_by(mot_viam ) %>% 
+  summarise(N=n()) #General
+Resumw2=as.data.frame(Resumw2)
+names(Resumw2)=c("Motivo Viaje","Num Personas")
+ESI_2015_1<-ESI_2015[which(ESI_2015$tip_movi=="Entrada",ESI_2015$pais_res!="Ecuador"),]
+y<-boxplot(ESI_2015_1$edad)
+TotalEntradas=sum(Resumw2[2])
+```
+
+```{r ESI_2015_2}
+Resumw2
+TotalEntradas
+```
+
+```{r g2, echo=FALSE}
+library(ggplot2)
+library(highcharter)
+Resumw2=as.data.frame(Resumw2)
+hchart(Resumw2, "column", hcaes(x = `Motivo Viaje`, y = `Num Personas`)) %>% hc_add_theme(hc_theme_darkunica())
+```
+El gráfico muestra avidentemente la concentración de entradas a Ecuador por turismo
+
+
+La edad media de las personas que ingresan a Ecuador es de  38,46 años cabe indicar que el promedió de las diferencias entre la media indicada y las edades de todas las personas analizadas es de 17,36 años.
+
+```{r ESI_2015ed,echo=FALSE}
+filtro<-ESI_2015_1$edad%in% y$out
+summary(ESI_2015_1$edad[!filtro])
+
+```
+El 50% de todas las personas que ingresan a nuestro pais Ecuador tiene edades superiores a 37 años y un 25% incluso tienen edad mayor a 51 años.
+
+
+La distribusción de los registro de los datos los presentamos en la siguiente gráfica:
+
+```{r ESI_2015h,echo=FALSE}
+hist(ESI_2015_1$edad[!filtro],xlab = "Edad", main="Histograma Edad"  )
+```
+
+
+Veamos datos de las vía de ingreso que se usan y con esto validaremos cual es la vía de ingresao más usada:
+
+```{r ESI_2015_4, include=FALSE}
+Resumw1= ESI_2015 %>% filter(tip_movi=="Entrada",pais_res!="Ecuador",mot_viam=="Turismo") %>% group_by(via_tran) %>% summarise(N=n()) #General
+Resumw1=as.data.frame(Resumw1)
+names(Resumw1)=c("Via Ingreso","Num Personas")
+
+```
+
+```{r ESI_2015_5}
+Resumw1
+```
+
+El ingreso Vía Aérea de las personas que vienen por turismo a Ecuador concentra un 36,7% la procedencia desde America del norte
+
+```{r ESI_2015_7, include=FALSE}
+IngresoViaAerea= ESI_2015 %>% filter(tip_movi=="Entrada",via_tran=="Vía aérea",pais_res!="Ecuador",mot_viam=="Turismo") %>% group_by(subcont_res) %>% summarise(N=n()) #General
+IngresoViaAerea=as.data.frame(IngresoViaAerea)
+names(IngresoViaAerea)=c("País precedencia","Num Personas")
+IngresoViaAerea=IngresoViaAerea[order(IngresoViaAerea$`Num Personas`),]
+
+TotalIngViaAerea=sum(IngresoViaAerea$`Num Personas`)
+```
+
+```{r ESI_2015_8}
+IngresoViaAerea
+```
+
+```{r ESI_2015_9}
+TotalIngViaAerea
+```
