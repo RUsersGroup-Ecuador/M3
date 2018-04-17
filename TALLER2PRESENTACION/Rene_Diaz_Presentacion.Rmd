@@ -1,0 +1,130 @@
+---
+title: "Regresi?n lineal m?ltiple"
+author: "Ren? D?az Flores"
+date: "13 de abril de 2018"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Objetivos:
+
+
+-Aplicar el Modelo de Regresi?n Lineal M?ltiple a un conjunto de datos ficticios en el software R-studio.
+
+
+-Diagnosticar si el modelo cumple con todos los test estad?sticos.
+
+## Introducci?n:
+
+La Disquera Rockola, l?der en el mercado musical, ha solicitado a su departamento de marketing, un estudio que permita evaluar el desempe?o de las ventas de los discos de rock, que se efectuaron el a?o 2017, a nivel nacional. 
+
+Para este fin, el ?rea de marketing cuenta con una base de datos que contiene la
+siguiente informaci?n:  
+
+-Venta de discos
+
+-Gasto en Publicidad  
+
+Sin embargo, para realizar un estudio m?s robusto, el departamento de marketing, ha
+pedido a las principales radios del pa?s, un informe donde se evidencie el tiempo que
+cada estaci?n radial dedica al rock y en especial a los grupos de rock que la Disquera
+Rockola est? promocionando. Asimismo, otro elemento que se ha tomado en consideraci?n al momento de elaborar el estudio, es la construcci?n de una encuesta, donde se ha consultado a las personas (en especial a aquellas en el rango de edad de los 15 hasta los 35 a?os) el nivel de agrado que tienen sobre ciertos grupos de rock.
+
+## Modelo:
+
+El ?rea de Marketing elaborar? un  modelo de regresi?n lineal m?ltiple, en el cual se desea observar el comportamiento de las ventas de los discos de rock, por medio de las variables explicativas: Gasto en publicidad, tiempo en que cada disco ha estado en el aire y nivel de agrado por los grupos de rock.
+
+El modelo a estimar ser? el siguiente:
+
+$y_{i}$=$\beta_{0}$+$\beta_{1}$.$x_{1i}$+$\beta_{2}$.$x_{2i}$+$\beta_{3}$.$x_{3i}$+$\mu_{i}$
+
+Donde:
+
+*$y_{i}$=Venta de discos de rock,expresada en miles de discos*
+
+*$x_{1}$=Gasto en publicidad de cada disco de rock,expresado en miles de d?lares*
+
+*$x_{2}$=N?mero de veces que las canciones fueron puestas en el aire en las principales radios del pa?s*
+
+*$x_{3}$=Nivel de preferencia por los grupos de rock,clasificado de la escala del 1 al 10, donde 1 es clasificado como desagradable,mientras que 10 como atractivo.*
+
+*$\mu_{i}$  = t?rmino de error inobservable*
+
+
+## Resultados:
+
+```{r echo=FALSE}
+#Abrir la base
+library(readxl)
+ventas <- read_excel("C:/Users/crbdl/Downloads/ventas.xlsx")
+```
+
+**Tabla No1: Modelo de Regresi?n Lineal M?ltiple**
+```{r echo=FALSE}
+regresion <- lm(ventas ~ gastos+tiempo+preferencias, data=ventas)
+summary(regresion)
+```
+
+## Intervalos de confianza
+
+**Tabla No2: Intervalos de confianza**
+```{r echo=FALSE}
+confint(regresion)
+```
+
+##Evaluaci?n el modelo de regresi?n
+
+####Supuesto No1: Independencia
+
+**Tabla No3:Test Durbin-Watson**
+```{r echo=FALSE}
+library(car)
+dwt(regresion) 
+```
+
+####Supuesto No2: Multicolinealidad
+
+***Tabla No4:Test para detectar multicolinealidad***
+```{r echo=FALSE}
+vif(regresion)
+1/vif(regresion)
+mean(vif(regresion))
+```
+
+##Supuesto No3: Residuos
+
+```{r echo=FALSE}
+ventas$ajustados <- regresion$fitted.values
+ventas$resi.stu  <- rstudent(regresion)
+```
+
+***Gr?fico No1:Residuos versus los valores ajustados del modelo***
+```{r echo=FALSE}
+library(ggplot2)
+library(extrafont)
+dispersion <- ggplot(ventas, aes(ajustados, resi.stu))
+dispersion + geom_point() + geom_smooth(method = "lm", colour = "Blue")+ labs(x = "Valores ajustados", y = "Studentized Residual") 
+```
+
+##Supuesto No3: Residuos (Continuaci?n)
+
+***Gr?fico No2: Q-Q plot***
+```{r echo=FALSE}
+qqplot.resid <- qplot(sample = ventas$resi.stu, stat="qq") + labs(x ="Valores te?ricos", y = "Valores observados")  
+qqplot.resid
+```
+
+##Conclusiones
+
+Una vez que se ha revisado que todos los supuestos inherentes al modelo de regresi?n lineal 
+m?ltiple se han cumplido, se puede concluir que el modelo previsto para la muestra puede ser
+generalizable para la poblaci?n. Asimismo, y a la luz de los resultados visto en las secciones
+anteriores, se concluye que el gasto en publicidad, y el tiempo que las emisoras colocan las
+canciones al aire son igual de importantes para predecir las ventas de los discos.  Por otro lado,
+a pesar de que la variable, preferencia por los grupos de rock, fue estad?sticamente significativo,
+tuvo un menor impacto en relaci?n a las dos variables antes mencionadas.  
