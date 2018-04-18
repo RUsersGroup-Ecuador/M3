@@ -1,0 +1,97 @@
+---
+title: "Tratamiento, Modelamiento Estadístico y Visualización dinámica con R"
+author: "Karina Guamaní"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## INFORME ESTADÍSTICO
+
+En el presente informe se presentan los datos correspondientes a las exportaciones de camarón, de enero a diciembre desde el año 2015 hasta el año 2017.
+
+A breves rasgos, en Ecuador, la oferta exportable del sector pesca y acuacultura con sus productos insignias como el camarón y el atún en conserva, representan el segundo y tercer rubro más importante del total de las exportaciones no petroleras de Ecuador.
+
+Cabe señalar que, a partir del año 2017, tras el acuerdo comercial firmado con la Unión Europea (UE), las exportaciones del sector camaronero tuvieron un incremento en el país.
+
+## INFORME ESTADÍSTICO
+
+En la tabla siguiente se presenta un resumen con los principales estadísticos descriptivos:
+
+
+|ESTADÍSTICO     |RESULTADO                      |                        
+|----------------|-------------------------------|
+|Missing         |0                              |
+|Minimum         |164919.82                      |    
+|Mean            |2.136.687.910                  |
+|Median          |2.045.461.400                  |
+|Max             |291873.85                      |
+|Stdev.          |3.530.361.977                  |
+|Kurtosis        |-.280                          |
+
+
+## INFORME ESTADÍSTICO
+
+A continuación se presenta un análisis de las principales medidas de:
+
+- Tendencia central
+
+- Variabilidad
+
+- Forma
+
+- Posición
+
+## Medidas de tendencia central
+
+De los datos se obtiene que, desde 2015 a 2017, en promedio, las exportaciones de camarón fueron de 213.668 miles de dólares.
+
+El valor más frecuente de las exportaciones es de 164.919 miles de dólares (que representa el 3.33% de los datos).
+
+## Variabilidad
+
+La diferencia promedio de las exportaciones de cada mes con respecto a la media es de 35.303 miles de dólares.
+
+
+## Forma
+
+De acuerdo a las figuras que se presentan a continuación, observamos lo siguiente:
+
+
+```{r, include = TRUE, echo=FALSE}
+
+Camaron <- c(169179,194323,196525,171974,200396,188055,191832,192158,184127,204546,193420,193059,164920,172008,180932,208108,248969,231565,239753,215029,224623,253641,222888,216720,181306,218406,245167,259716,285595,281920,291874)    
+
+
+hist(Camaron,freq = F, col = "blue")
+lines(density(Camaron), col = "red", lty = 2, lwd = 3)
+```
+
+## Forma
+
+```{r}
+boxplot(Camaron, horizontal = TRUE,
+        border = c("blue"))
+```
+
+## Forma
+
+```{r}
+## Forma
+qqnorm(Camaron, col="blue")
+qqline(Camaron, col = "red")
+```
+
+## Forma
+
+De acuerdo con las figuras anteriores, se observa que existe heterogeneidad en los datos, esto tiene que ver con el acuerdo con la Unión Europea que se firmó en 2017, además cabe señalar que, son muy pocos los datos de las exportaciones de camarón que son muy grandes en comparación con el resto.
+
+## Posición
+
+Finalmente, en el 50% del período de estudio se tienen hasta 204.546 miles de dólares de las exportaciones de camarón.
+
+
+
+
