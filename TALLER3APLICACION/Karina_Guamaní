@@ -1,0 +1,75 @@
+load(url("https://github.com/KarinaGuamani/Karina-Guamani/raw/master/Data.RData"))
+
+
+PROVINCIA <- Data$PROVINCIA
+CANTON <- Data$CANTON
+ZONA <- Data$ZONA
+MES <- Data$MES
+CAUSA <- Data$CAUSA
+CLASE <- Data$CLASE
+NUM_FALLECIDO <- Data$NUM_FALLECIDO
+NUM_LESIONADO <- Data$NUM_LESIONADO
+TOTAL_VICTIMAS <- Data$TOTAL_VICTIMAS
+
+data <- data.frame(PROVINCIA, CANTON, ZONA, MES, CAUSA, CLASE, NUM_FALLECIDO, NUM_LESIONADO, TOTAL_VICTIMAS)
+
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+
+options(shiny.sanitize.errors = TRUE)
+
+ui <- fluidPage(
+  titlePanel("ACCIDENTES DE TRANSITO EN ECUADOR - 2015, POR KARINA GUAMANI"),
+  tabsetPanel(type = "tabs",
+              tabPanel("INFORMACION",
+                       sidebarLayout(
+                         sidebarPanel(
+                           sliderInput("n",
+                                       "REGISTROS",min = 1,max = 35707  ,value = 100),
+                           selectInput("variable","ESCOJA LA VARIABLE:",
+                                       choices = names(data)[-c(1:3)],selected = "PROVINCIA"),
+                           
+                           tableOutput("tabla_resumen")
+                         ),
+                         mainPanel(
+                           highchartOutput("grafico"),
+                           downloadButton("descarga","DESCARGAR"),
+                           tabsetPanel(type ="pills",
+                                       tabPanel("Tabla",dataTableOutput("tabla")
+                                       )
+                           )
+                         )
+                       )
+              )
+  )
+  
+)
+
+server <- function(input, output) {
+  
+  output$descarga <- downloadHandler(
+    filename = function() {"data.csv"},
+    content = function(file){
+      write.csv2(data, file)
+    })
+  
+  output$tabla <- renderDataTable({
+    datatable(head(data[,c("PROVINCIA","CAUSA","MES","CLASE","CANTON",input$variable)],input$n),
+              extensions = 'Buttons', options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                
+              ))
+    
+  })
+  
+  output$tabla_resumen <- renderTable({
+    table(data[, c(input$variable)])
+  })
+  output$grafico <- renderHighchart({
+    hchart(data[,c(input$variable)], colorByPoint = "black", name = "VARIABLE")
+  })
+}
+shinyApp(ui = ui, server = server)
