@@ -1,0 +1,101 @@
+getwd() 
+setwd("C:/Users/Claro/Desktop")
+data=read.csv("TransferenciasGAD.csv", sep=";", header=TRUE)
+str(data)
+data$GADMunicipal <- as.character(data$GADMunicipal)
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+ui <- fluidPage(
+  titlePanel("Transferencias GAD Municipales"),
+  tabsetPanel(type = "tabs",
+              tabPanel("Principal",
+                       sidebarLayout(
+                         sidebarPanel(
+                           sliderInput("n",
+                                       "Registros",min = 1,max = 221,value = 10),
+                           selectInput("variable","Seleccione la variable:",
+                                       choices = names(data)[-c(10)],selected = "GAD Municipal"),
+                           
+                           tableOutput("tabla_resumen")
+                         ),
+                         mainPanel(
+                           tabsetPanel(type ="pills",
+                                       tabPanel("Tabla",dataTableOutput("tabla"),
+                                                downloadButton("descarga","Descargar")
+                                       ),
+                                       tabPanel("Grafico",
+                                                conditionalPanel(condition = 'input.variable!="GADMunicipal"',
+                                                                 highchartOutput("grafico")
+                                                )
+                                       )
+                           )
+                         )
+                       )
+              ),
+              tabPanel("Secundario",
+                       h3("Transferencias"),
+                       textInput("gad", "Ingrese el GAD Municipal"),
+                       actionButton("buscar", "BUSCAR"), br(),br(),br(),
+                       textOutput("montoA14"),br(),
+                       tableOutput("montoB14"),br(),
+                       verbatimTextOutput("montoTotal14")
+              ),
+              tabPanel("Tercero",
+                       selectInput("montoA14", "seleccione el GAD", 
+                                   choices = data$GADMunicipal)
+              ))
+)
+
+server <- function(input, output){ 
+  
+  buscado <- eventReactive(input$buscar,{
+    if(is.na(as.numeric(input$gad))==F &
+       nchar(input$gad)==20) {
+      data %>% filter(GAD==input$gad)
+    } else {
+      data.frame(0)
+    }
+  })
+  
+  output$resultado <- renderText({
+    #input <- list(0)
+    #input$ruc <- "1111111111111"
+    
+    ifelse(nrow(buscado())==1,
+           paste("El MONTO buscado corresponde a", buscado()$GADMUNICIPAL),
+           "MONTO no encontrado")
+  })
+  
+  output$resultado2 <- renderTable({
+    buscado()[,-which(names(buscado())=="montoA14")]
+  })
+  montoA14 <- reactive(buscado()$montoA14)
+  
+  output$resultado1 <- renderText(montoA14())
+  
+  output$descarga <- downloadHandler(
+    filename = function() {"TransferenciasGAD.csv"},
+    content = function(file){
+      write.csv2(data, file)
+    })
+  
+  output$tabla <- renderDataTable({
+    datatable(head(data[,c("montoA14", "GADMunicipal",input$variable)],input$n),
+              extensions = 'Buttons', options = list(
+                dom = 'Bfrtip',
+                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+              ))
+  })
+  
+  output$tabla_resumen <- renderTable({
+    table(data[, c(input$variable)])
+    #group_by(data,input$variable) %>% summarize(Numero=n())
+  })
+  output$grafico <- renderHighchart({
+    hchart(data[c(1:input$n), c(input$variable)], colorByPoint = TRUE, name = "variable")
+    #group_by(data,input$variable) %>% summarize(Numero=n())
+  })
+}
+shinyApp(ui = ui, server = server)
