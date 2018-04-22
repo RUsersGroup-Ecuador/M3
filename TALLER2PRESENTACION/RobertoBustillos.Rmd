@@ -1,0 +1,67 @@
+---
+title: "Series temporales"
+author: "Roberto Bustillos"
+date: "April 15, 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Introducción
+
+La serie temporal utilizada corresponde al Producto interno bruto de España expresado en millones de euros. Estos datos empiezan a partir de enero de 1996 y terminan en diciembre de 2016, tienen una periodicidad trimestral.
+
+```{r 1,echo=FALSE,fig.align='center'}
+PIB	<- read.table(file = "F:/Master Bioestadística/Series temporales/Serie Temporal.csv",sep=";",header=TRUE)
+PIB<- ts(PIB[,2],start=c(1996,1),freq=4)
+plot(PIB,xlab="Periodo",ylab="Millones de euros",
+     main="PIB España",lwd=2)
+abline(v=1996:2016,lwd=.7,lty=2,col="Red")
+```
+
+
+## Análisis I
+
+- De forma general se puede ver que la serie temporal muestra una tendencia creciente del PIB hasta el año 2008. Luego decrece hasta el 2013 y nuevamente crece.
+
+- Además, se puede observar la estacionalidad, que indica que conforme aumenta el PIB año trás año, la amplitud estacional también aumenta. Esto indicaría que es esquema multiplicativo.
+
+- Para	confirmar	este esquema	se realiza un	gráfico	de	puntos	entre	los millones anuales de euros	y	la	desviación	típica	intra-anual.	
+
+## Análisis II
+
+```{r 2,echo=FALSE,fig.align='center'}
+Meuros.anual	<- as.numeric(aggregate(PIB,FUN=sum))
+Desviacion.anual	<- as.numeric(aggregate(PIB,FUN=sd))
+plot(Meuros.anual,Desviacion.anual,pch=20,col="Red",
+     xlab="Millones de euros",ylab="Desviación Típica")
+abline(lm(Desviacion.anual~Meuros.anual),lty=2)
+```
+
+Se nota que los años que tienen mayor cantidad de millones de euros se correlacionan con una mayor variabilidad intra-anual. Por lo tanto, la serie tiene un esquema multiplicativo.
+
+## Serie anual
+
+Lo más adecuado en este caso sería agregar la serie sumando los datos, ya que es importante conocer la totalidad de millones de euros del PIB.
+
+```{r 3,echo=FALSE,fig.align='center'}
+plot(aggregate(PIB,	FUN	= sum), xlab	= "Año",	ylab	= "Millones de euros",
+     main="PIB España",lwd=2)
+```
+
+
+## Descomposición de la serie
+
+En este caso se utilizó el método de medias móviles ya que el modelo es multiplicativo. 
+
+```{r 4,echo=FALSE,fig.align='center'}
+PIB.decom.mul<-decompose(PIB,type="mult")
+plot(PIB.decom.mul)
+```
+
+## Descomposición de la serie
+
+- Tendencia: Se puede indicar que existe una tendencia creciente del PIB en España desde que inicia la serie en el año 1996 hasta el 2008, luego la tendencia es decreciente hasta el 2013, seguido de esto vuelve a notarse un crecimiento del PIB.
