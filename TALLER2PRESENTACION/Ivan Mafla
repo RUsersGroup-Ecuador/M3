@@ -1,0 +1,176 @@
+---
+title: "Presentación_Iván_Mafla Modelo Lineal Multivariante"
+author: "Iván Mafla"
+date: "14 de abril de 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## INFORME DE RESULTADOS SOBRE DEPORTISTAS DE ALTO RENDIMIENTO
+
+Se realizó un estudio para describir el somatotipo de los deportistas de alto rendimiento de distintas disciplinas de un Centro de alto rendimiento chileno. 
+Se evaluaron antropométricamente 309 deportistas de ambos sexos. Características (promedio y D.E.): Mujeres: edad 19,6 ± 4,8 años; peso, 62,1 ± 10,1 kg; estatura, 162,7 ± 12,5 cm; Hombres: edad 21,1 ± 5,9 años; peso, 78,8 ± 11,6 kg; estatura, 176,5 ± 8,3 cm.
+Se intenta determinar un modelo de regresión que permita estimar la edad de un deportista de alto rendimiento en función de las variables: Peso en kg, Estatura en cm y el Índice de Masa Corporal.
+
+## 1. Modelo lineal multivariante aplicado al problema de estudio
+
+Sobre la base de datos “Rendimiento” de estudio se construirá un modelo de regresión lineal multivariante de la EDAD, sobre las otras tres variables, PESO, ESTATURA e IMC.
+
+## Lectura de los datos:
+
+
+```{r echo=TRUE}
+library(readxl)
+Rendimiento <- read_excel("~/Statistics Course R/Rendimiento.xlsx")
+View(Rendimiento)
+attach(Rendimiento)
+head(Rendimiento)
+```
+## Ajuste del modelo
+
+
+
+Para ajustar el modelo de regresión lineal múltiple de la edad (EDAD) sobre las otras variables, se utiliza la función lm. El resultado se muestra en la siguiente diapositiva.
+
+
+## *
+```{r echo=TRUE}
+modelo <- lm(EDAD~PESO+ESTATURA+IMC)
+summary(modelo)
+```
+## *
+
+La tabla resumen anterior del ajuste presenta los mismos elementos que en el modelo de regresión simple. En la columna "Estimate" encontraremos los parámetros estimados del modelo: el intercepto y los coeﬁcientes asociados a cada variable.
+
+## ANÁLISIS DE RESULTADOS
+
+De acuerdo a los parámetros estimados del modelo, se puede sacar las siguientes conclusiones.
+
+-	El peso de los deportistas posee en coeficiente negativo, aunque no es significativamente diferente de cero, lo cual indica que variaciones en los pesos prácticamente no es un factor determinante a la hora de estimar la edad de un deportista de alto rendimiento. Esto se puede explicar, porque existen diferentes disciplinas cuyos objetivos y actividades son completamente diferentes, en unos casos un mayor rendimiento implica un peso mayor como es el caso de los deportes de carga de peso o que necesitan reacciones explosivas, halterofilia, velocidad, judo, remo, etc., mientras que en otros casos un rendimiento alto implica un peso relativamente bajo como es el caso de los deportes de resistencia y fondo, atletismo, ciclismo, triatlón, etc.
+
+## *
+
+-	La estatura de los deportistas presenta un coeficiente negativo que es muy ligeramente significativamente diferente de cero, lo que significa que, para deportes de alto rendimiento, un performance más bajo está relacionado con la estatura, la edad y el deporte practicado. Por ejemplo, un basquetbolista que presente estatura mayor por lo general será asociado con edades mayores en donde se ha alcanzado el máximo de estatura, y en consecuencia el rendimiento irá decayendo, sumado a la dificultad técnica que representa una estatura mayor a la hora de tener control sobre los movimientos corporales. Sin embargo, el estimador encontrado para esta variable, no es un factor muy claro para predecir la edad de un individuo. 
+
+## *
+
+-	El coeficiente del índice de masa corporal presenta un coeficiente positivo y ligeramente significativo. Por lo que un IMC mayor implica individuos con edades mayores en el entorno del alto rendimiento ya que es común que se logre adquirir una masa corporal mayor en la madurez del deportista. Esta variable es claramente un buen estimador de la edad biológica de una persona saludable, si se tiene en cuenta la relación que existe entre la práctica del deporte de alto rendimiento y el buen estado físico del cuerpo.
+
+## Coeficiente de determinación
+
+El valor del coeficiente de determinación es de 0.1274, que es un valor pequeño para modelos de regresión. Esto significa que el modelo lineal encontrado no realiza aportes precisos para la estimación de la edad de los deportistas.
+
+En otras palabras, las variables de estudio no son buenos parámetros para determinar la edad de un deportista de alto rendimiento, aunque el índice de masa corporal podría ser válido. Esta característica del modelo podría explicarse debido a la gran variabilidad de deportes, cuyos requerimientos de peso y estatura son completamente diferentes para deportistas con edades similares.
+
+## Varianza residual
+Se recupera primero la matriz de diseño, para determinar el número de datos n y el número de parámetros p.
+
+```{r echo=TRUE}
+x <- model.matrix(modelo)
+n <- nrow(x)
+p <- ncol(x)
+```
+De aquí se obtiene que el modelo tiene 34 datos y 4 parámetros.
+
+## *
+La varianza residual y la varianza del error, que nos indican la calidad del modelo se calcula como:
+```{r echo=TRUE}
+deviance(modelo)
+sigma2 <- (deviance(modelo))/(n-p)
+sigma2
+```
+Este valor alto confirma que el modelo no permite determinar de forma precisa la edad de los deportistas. 
+
+## ANALISIS ANOVA Y DE RESIDUOS
+
+El diagrama de dispersión del modelo se muestra a continuación:
+
+## *
+
+```{r echo=TRUE}
+disp <-plot(EDAD~IMC+PESO+ESTATURA, xlab="imc+peso+estatura",ylab = "edad")
+disp
+```
+
+## *
+```{r echo=TRUE}
+fm = aov( lm(EDAD ~ IMC+ESTATURA+PESO) )
+fm
+```
+
+## *
+```{r echo=TRUE}
+anova(modelo)
+```
+## *
+
+Del análisis anterior se puede concluir que para las variables PESO e IMC, la respuesta de EDAD sigue una recta de regresión horizontal, ya que los valores de F son pequeños para los valores de significación dados, mientras que la variable estatura parece no seguir una recta de regresión horizontal con la salida EDAD, aunque no se podría rechazar la hipótesis nula ya que el valor de F no es muy grande.
+Para hacer el análisis de hipótesis de normalidad se hace un test shapiro.
+Es necesario hacer un histograma de los residuos para mirar su distribución, tomando en cuenta que el análisis con los residuos estandarizados es mejor en la interpretación de las varianzas.
+
+## Histograma de residuos
+```{r echo=TRUE}
+hist(fm$residuals)
+```
+
+## Hostograma de residuos estandarizados
+```{r echo=TRUE}
+hist(rstandard(modelo))
+```
+
+## Test Shapiro
+
+Finalmente se realiza el test.
+
+```{r echo=TRUE}
+shapiro.test(fm$residuals)
+```
+
+## CONCLUSIONES
+
+-	Se puede observar que los datos no siguen una evolución lineal, consistente con los resultados obtenidos en los análisis anteriores.
+-	Del test de normalidad se obtiene un valor bajo, por lo que se puede rechazar la normalidad. 
+
+## ANALISIS DESCRIPTIVO
+
+Para esto se utiliza la función EDA aplicada sobre cada parámetro del modelo.
+
+```{r include= FALSE}
+library(PASWR)
+```
+
+## EDA DEL IMC
+```{r echo=FALSE}
+EDA(IMC,trim = 0.05)
+```
+## EDA DEL PESO
+```{r echo=FALSE}
+EDA(PESO,trim = 0.05)
+```
+## EDA DE LA ESTATURA
+```{r echo=FALSE}
+EDA(ESTATURA,trim = 0.05)
+```
+## EDA DE LA EDAD
+```{r echo=FALSE}
+EDA(EDAD,trim = 0.05)
+```
+
+
+## Conclusiones del análisis descriptivo
+
+En todos los casos se puede observar la variabilidad marcada en los datos, teniéndose inclusive algunos valores atípicos, con comportamientos muy sesgados.
+
+-	En el caso del IMC, se puede ver que la tendencia es a valores más bajos respecto a una media de 26.6 y desviación de 2.66. Coherente con las necesidades de un deportista de alto rendimiento. Los valores atípicos en este caso, se pueden atribuir a deportes en los cuales el tamaño corporal del deportista puede implicar un IMC mayor como es el caso de judo o el levantamiento de pesas.
+
+## *
+
+-	En el caso del PESO, de igual forma, la tendencia es a valores más bajos que la media, tomando en cuenta que un mayor porcentaje de deportes requieren resistencias más altas y por ende cuerpos más livianos. Los valores atípicos se pueden explicar con el mismo criterio del caso del IMC.
+
+## *
+
+-	En el caso de la ESTATURA se observa un comportamiento normal alrededor de la media, se puede explicar, ya que este parámetro no es determinante a la hora de practicar uno u otro deporte, además de que los deportistas de alto rendimiento suelen mostrar estaturas mayores a la de los individuos que no practican deporte a niveles altos.
