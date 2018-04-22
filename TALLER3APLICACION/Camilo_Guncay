@@ -1,0 +1,126 @@
+library(shiny)
+library(DT)
+library(dplyr)
+library(shinythemes)
+library(ggplot2)
+library(scales)
+library(data.table)
+
+load(url("https://github.com/camilo593/Prueba_BCE/raw/master/basefin.RData"))
+load(url("https://github.com/camilo593/Prueba_BCE/raw/master/diccionario.RData"))
+colnames(diccionario) <- c("Código", "Serie")
+base_fin[,2:ncol(base_fin)]<-format(base_fin[,2:ncol(base_fin)], digits = 2, nsmall = 2)
+nomideac<-colnames(base_fin[2:15])
+nommon<-colnames(base_fin[16:ncol(base_fin)])
+base_fin$Fecha_g <-base_fin$fecha
+base_fin$Fecha<-format(base_fin$fecha, "%Y-%b")
+base_fin$fecha<-as.character(base_fin$fecha)
+tema_cam <- theme(axis.text = element_text(color="black"), axis.ticks = element_blank(), panel.background = element_rect(fill="white"), 
+                  panel.grid.major = element_line(colour = "grey95"), strip.background = element_rect(fill = "gray92"), plot.title = element_text(hjust = 0.5))
+
+# Define UI for application that draws a histogram
+ui <- fluidPage( theme = shinytheme("flatly"), titlePanel("Indice de Actividad Económica y Estadísticas Monetarias"), 
+                 br(), 
+                 tabsetPanel(type = "pills", 
+                             tabPanel("IDEAC", 
+                                      sidebarLayout(
+                                        sidebarPanel(
+                                          dateRangeInput(inputId = "fechas", label = "Seleccione la fecha", start = base_fin[1,1], 
+                                                         end = base_fin[nrow(base_fin),1], language = "es"), 
+                                          selectInput(inputId = "varsideac", label = "Seleccione la variable", choices = nomideac), 
+                                          tableOutput("resideac"), h3("Leyenda"), tableOutput("diccideac")
+                                        ),
+                                        mainPanel(tabsetPanel(type = "tabs", 
+                                                              tabPanel("Cuadro de datos", br(), br(), dataTableOutput("tabideac")), 
+                                                              tabPanel("Gráfico", br(), br(), plotOutput("grafideac"))) 
+                                        )
+                                      )
+                             ),
+                             tabPanel("Monetarias", 
+                                      sidebarLayout(
+                                        sidebarPanel(
+                                          dateRangeInput(inputId = "fechas1", label = "Seleccione la fecha", start = base_fin[1,1], 
+                                                         end = base_fin[nrow(base_fin),1], language = "es"), 
+                                          selectInput(inputId = "varsmon", label = "Seleccione la variable", choices = nommon),
+                                          tableOutput("resmon") , h3("Leyenda") , tableOutput("diccmon")
+                                          
+                                        ),
+                                        mainPanel(tabsetPanel(type = "tabs", 
+                                                              tabPanel("Cuadro", br(), br(),dataTableOutput("tabmon")),
+                                                              tabPanel("Gráfico", br(), br(), plotOutput("grafmon"))
+                                        )
+                                        
+                                        )
+                                      )
+                             )
+                 )
+)
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  tabla_ideac <- reactive({
+    ideac_fechas <- base_fin[base_fin$fecha >= input$fechas[1] & base_fin$fecha <= input$fechas[2], c("fecha","Fecha", "Fecha_g", input$varsideac)]
+    return (ideac_fechas)
+  })
+  
+  output$tabideac <- renderDataTable({
+    datatable(tabla_ideac()[,c("Fecha", input$varsideac)], extensions = "Buttons", options = list(pageLength = 12, dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
+                                                                                                  language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json")), rownames = FALSE)
+  })
+  
+  output$grafideac <- renderPlot({
+    tit1<- diccionario %>% filter(Código==input$varsideac)
+    ggplot(tabla_ideac(), aes(x=tabla_ideac()[,"Fecha_g"], y=as.numeric(tabla_ideac()[,input$varsideac]))) + geom_line(size=1.5, color="#00ba38") + geom_point(color="#00ba38", size=1.7) + 
+      labs(x="\nFecha", title=as.character(tit1[2]) , y="Indice\n") + scale_x_datetime(breaks = date_breaks(width = "6 month"), labels = date_format("%y-%b")) + 
+      tema_cam 
+  })   
+  
+  tabla_mon <- reactive({
+    mon_fechas <- base_fin[base_fin$fecha >= input$fechas1[1] & base_fin$fecha <= input$fechas1[2], c("fecha","Fecha", "Fecha_g", input$varsmon)]
+    return (mon_fechas)
+  })
+  
+  output$tabmon <- renderDataTable({
+    datatable(tabla_mon()[,c("Fecha", input$varsmon)], extensions = "Buttons", options = list(pageLength = 12, dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'), 
+                                                                                              language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json")), rownames = FALSE)
+  })
+  
+  output$grafmon <- renderPlot({
+    tit2<- diccionario %>% filter(Código==input$varsmon)
+    ggplot(tabla_mon(), aes(x=tabla_mon()[,"Fecha_g"], y=as.numeric(tabla_mon()[,input$varsmon]))) + geom_line(size=1.5, color="#f8766d") + geom_point(size=1.5, color="#f8766d") + tema_cam +
+      labs(x="\nFecha", y="", title=as.character(tit2[2])) + scale_x_datetime(breaks = date_breaks(width = "6 month"), labels = date_format("%Y-%b"))
+  })
+  
+  output$resmon <- renderTable({
+    resumen <- as.data.table(as.numeric(tabla_mon()[,input$varsmon]))
+    resumen <- resumen[,list(Media=format(mean(na.omit(as.numeric(tabla_mon()[,input$varsmon]))), digits = 2, nsmall = 2L), 
+                             Desv=format(sd(na.omit(as.numeric(tabla_mon()[,input$varsmon]))), nsmall = 2L, digits = 2), 
+                             Min= format(min(as.numeric(tabla_mon()[,input$varsmon]), na.rm = T), nsmall = 2L, digits = 2), 
+                             Max=format(max(as.numeric(tabla_mon()[,input$varsmon]), na.rm = T), digits=2, nsmall=2))]
+    resumen
+  })
+  
+  output$resideac <- renderTable({
+    resumi <- as.data.table(as.numeric(tabla_ideac()[,input$varsideac]))
+    resumi <- resumi[,list(Media=format(mean(na.omit(as.numeric(tabla_ideac()[,input$varsideac]))), digits = 2, nsmall = 2L), 
+                           Desv=format(sd(na.omit(as.numeric(tabla_ideac()[,input$varsideac]))), nsmall = 2L, digits = 2), 
+                           Min= format(min(as.numeric(tabla_ideac()[,input$varsideac]), na.rm = T), nsmall = 2L, digits = 2), 
+                           Max=format(max(as.numeric(tabla_ideac()[,input$varsideac]), na.rm = T), digits=2, nsmall=2))]
+    resumi
+  })
+  
+  output$diccmon <- renderTable({
+    diccionario[which(diccionario$Código %in% nommon),]
+  })
+  
+  output$diccideac <- renderTable({
+    diccionario[which(diccionario$Código %in% nomideac),]
+  })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+
