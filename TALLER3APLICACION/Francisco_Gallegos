@@ -1,0 +1,66 @@
+library(reshape)
+library(rsconnect)
+library(shiny)
+library(DT)
+library(dplyr)
+library(shinythemes)
+library(data.table)
+library(highcharter)
+
+
+load(url("https://github.com/FranciscoGallegosS/Shiny/raw/master/Llegadas.RData"))
+d2 <- cast(Llegadas, ISO+Pais+Continente~Anio, sum, value = "Viaje")
+anios<-colnames(d2[,4:22])
+
+
+# Define UI for application that draws a histogram
+ui <- fluidPage( theme = shinytheme("flatly"), titlePanel("Flujos Migratorios del Ecuador"), 
+                 br(), 
+                 tabsetPanel(type = "pills", 
+                             tabPanel("Llegadas Anuales de Extranjeros ", 
+                                      sidebarLayout(
+                                        sidebarPanel(
+                                          selectInput(inputId = "year", label = "Seleccione el periodo:", choices = anios)
+                                        ),
+                                        mainPanel(tabsetPanel(type = "tabs", 
+                                                              tabPanel("Mapa interactivo", br(), br(), highchartOutput("Mapa_mundo")),
+                                                              tabPanel("Datos", br(), br(), dataTableOutput("Datos_mundo")))
+                                        )
+                                      )
+                             )
+                 )
+)
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  data_anual <- reactive({
+    df <- as.data.table(d2[ ,c("ISO",input$year)])
+    colnames(df)[2] <- "Viajes"
+    return (df)
+  })
+  
+  
+  output$Datos_mundo <- renderDataTable({
+    datatable(d2[ , which(names(d2) %in% c("ISO","Pais","Continente",input$year))],
+              extensions = "Buttons", options = list (
+                dom = "Bfrtip",
+                buttons = c('copy','csv','excel','pdf','print')
+              ))
+  })
+  
+  output$Mapa_mundo <- renderHighchart({
+    hcmap("custom/world", data = data_anual(), 
+          value ="Viajes",
+          joinBy = c("iso-a3", "ISO"), name = "Llegadas",
+          dataLabels = list(enabled = TRUE, format = '{point.name}'),
+          borderColor = "#3366cc", borderWidth = 0.3, 
+          tooltip = list(valueDecimals = 0))%>%
+      hc_mapNavigation(enabled = TRUE)
+  })   
+  
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
