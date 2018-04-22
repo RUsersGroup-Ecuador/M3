@@ -1,0 +1,147 @@
+---
+title: "Series temporales"
+author: "Roberto Bustillos"
+date: "April 15, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Haz	una	gráfica	de	la	serie	completa.
+
+La serie temporal utilizada corresponde al Producto interno bruto de España expresado en millones de euros. Estos datos empiezan a partir de enero de 1996 y terminan en diciembre de 2016, tienen una periodicidad trimestral.
+
+```{r 1,echo=FALSE,fig.align='center'}
+PIB	<- read.table(file = "F:/Master Bioestadística/Series temporales/Serie Temporal.csv",sep=";",header=TRUE)
+PIB<- ts(PIB[,2],start=c(1996,1),freq=4)
+plot(PIB,xlab="Periodo",ylab="Millones de euros",
+     main="PIB España",lwd=2)
+abline(v=1996:2016,lwd=.7,lty=2,col="Red")
+```
+
+De forma general se puede ver que la serie temporal muestra una tendencia creciente del PIB hasta el año 2008. Luego decrece hasta el 2013 y nuevamente crece.
+
+Además, se puede observar la estacionalidad, que indica que conforme aumenta el PIB año trás año, la amplitud estacional también aumenta. Esto indicaría que es esquema multiplicativo.	
+
+Para	confirmar	este esquema	se realiza un	gráfico	de	puntos	entre	los millones anuales de euros	y	la	desviación	típica	intra-anual.	
+
+```{r 2,echo=FALSE,fig.align='center'}
+Meuros.anual	<- as.numeric(aggregate(PIB,FUN=sum))
+Desviacion.anual	<- as.numeric(aggregate(PIB,FUN=sd))
+plot(Meuros.anual,Desviacion.anual,pch=20,col="Red",
+     xlab="Millones de euros",ylab="Desviación Típica")
+abline(lm(Desviacion.anual~Meuros.anual),lty=2)
+```
+
+Una vez realizado el gráfico, se nota que los años que tienen mayor cantidad de millones de euros se correlacionan con una mayor variabilidad intra-anual. Por lo tanto, la serie tiene un esquema multiplicativo.
+
+
+#### Crea	 una	 serie	 anual	 agregando	 tus	 datos de	 la	 forma	 más	 adecuada	(FUN=mean	o	FUN=sum)	y muéstrala	gráficamente.
+
+Lo más adecuado en este caso sería agregar la serie sumando los datos, ya que es importante conocer la totalidad de millones de euros del PIB.
+
+```{r 3,echo=FALSE,fig.align='center'}
+plot(aggregate(PIB,	FUN	= sum), xlab	= "Año",	ylab	= "Millones de euros",
+     main="PIB España",lwd=2)
+```
+
+
+#### Haz	 una	 descomposición	 de	 la	 serie,	 muestra gráficamente	 cada	 una	 de	 las	componentes	 estimadas	 y	 muestra	 gráficamente	 la	 estacionalidad	 para	 un único	año	completo.
+
+La descomposición de las series se realiza a partir de dos métodos: medias móviles y regresiones locales ponderadas. En el primero se pierden datos al inicio y final de la serie y funciona para modelos aditivos y multiplicativos, mientras que, en el segundo no se pierden datos ni al inicio ni al final de la serie y sirve sólo para modelos aditivos. 
+
+En este caso se utilizó el método de medias móviles ya que el modelo es multiplicativo. 
+
+```{r 4,echo=FALSE,fig.align='center'}
+PIB.decom.mul<-decompose(PIB,type="mult")
+plot(PIB.decom.mul)
+```
+
+```{r 5,echo=FALSE, warning=FALSE,fig.align='center'}
+ts.plot(PIB,PIB.decom.mul$trend,plot.type="single",col=c("Black","Red"),lwd=c(1,2),xlab="Periodo",ylab="Millones de euros",main="Tendencia")
+legend("bottomright",legend = c("Original","Tendencia"),col=c("Black","Red"),lty = c(1,1),lwd =c(1,2))
+```
+
+Tendencia: Tras la descomposición se puede analizar cada componente de la serie. Con respecto a la tendencia, se puede indicar que existe una tendencia creciente del PIB en España desde que inicia la serie en el año 1996 hasta el 2008, luego la tendencia es decreciente hasta el 2013, seguido de esto vuelve a notarse un crecimiento del PIB. 
+
+
+
+```{r 6,echo=FALSE,fig.align='center'}
+lPIB	<- log(PIB)
+estacionalidad	<- tapply(lPIB-mean(lPIB),
+                         cycle(lPIB),mean)
+plot(PIB.decom.mul$figure,type='b',xlab='Trimestre',
+     ylab="Efecto estacional",
+     col="Black",pch=20,lwd=2,
+     ylim=c(0.8,1.20),main="Estacionalidad")
+lines(1:4,1+estacionalidad,col="Green",pch=20,lwd=2,type="b")
+abline(h=1,lty=2,lwd=2,col="Red")
+legend("topright",legend=c('Descomposición','Logaritmo'),
+       col=c("Black","Green"),	
+       pch=20,lwd=2)
+
+```
+
+EFECTO ESTACIONAL CALCULADO
+```{r 7,echo=FALSE}
+round(100*estacionalidad,1)
+```
+
+
+Estacionalidad: Luego de calcular el efecto estacional a partir del logaritmo natural de la serie (esquema multiplicativo) y realizar el gráfico anual, se observa que es una serie de orden 4 (trimestral), existen dos incrementos del porcentaje de millones de euros del PIB con respecto de la media anual. El primero es del 1.2%, que corresponde al segundo trimestre y el segundo incremento es del 5.2% que es más notable y se produjo en el último trimestre del año.
+Por otro lado, el porcentaje de millones del PIB disminuye en el primer y tercer trimestres, siendo el más notable el primer trimestre, con una reducción del 4.4% en relación a la media anual. 
+
+Además, en el gráfico también se puede apreciar que la estacionalidad estimada mediante la descomposición (línea negra) es similar a la estimada con el logaritmo de la serie (línea verde). Sin embargo, el primer método ha estimado unos efectos estacionales un poco más próximos a 1 en relación al otro método.    
+
+ 
+
+
+#### Haz	un	análisis	del	residuo	obtenido	tras	la	descomposición	para	determinar	si	 es	 ruido	 blanco	 e	 identificar	 posibles	 intervenciones.	 (Haz	 uso	 de	 las	técnicas	estadísticas	que	conozcas).
+
+En este caso la serie temporal tiene un esquema multiplicativo, por lo tanto el error está expresado en tanto por uno y tiene una media igual a 1.
+
+```{r 8,echo=FALSE,fig.align='center'}
+error	<- PIB.decom.mul$x	- PIB.decom.mul$trend*PIB.decom.mul$seasonal
+se	<- sd(error,na.rm=TRUE)	
+plot(error,xlab='Periodo',ylab='Millones de euros',
+     main="Error de la descomposición",
+     col="Black",lwd=1,ylim=c(-5000,5000))
+abline(h=c(-3*se,-2*se,2*se,3*se),
+       lty=2,lwd=2,col=c("Grey","Black","Black","Grey"))
+
+```
+
+Al realizar el análisis del residuo se puede notar en el gráfico que existe un valor atípico que casi sobrepasa el IC al 99.7% (línea entrecortada gris) en la parte inferior, este valor corresponde al año 2009 en el que el PIB de España fue inferior a lo estimado. Tal vez se deba a la crisis económica que vivió el país en ese año.
+
+```{r 9,echo=FALSE,fig.align='center'}
+plot(as.numeric(lag(error)),error,pch=20,
+     xlab=expression(e[t]),ylab=expression(e[t+1]),
+     main="Análisis incorrelación")
+
+```
+
+En este gráfico realizado en base al error de un periodo e~t~ con respecto al error del periodo siguiente e~t+1~, se observa que existe correlación serial en los residuos del modelo.  
+
+
+```{r 10,echo=FALSE,fig.align='center'}
+plot(aggregate(error,FUN=sd),type="p",pch=20,
+     xlab='Periodo',ylab="Desviación estándar",
+     main="Análisis homocedasticidad")
+```
+
+Así también, se puede ver que el residuo es heterocedástico, debido a que se observan años con una desviación estándar muy baja en 1999 y años con una desviación estándar muy elevada en 2007, 2009 y 2012. 
+
+En conclusión, en este caso los residuos no se comportan como un ruido blanco ya que no se cumplen los supuestos de incorrelación y homocedasticidad. Por lo tanto, el modelo no ha sido capaz de reproducir el patrón de comportamiento sistemático de la serie y habría que reformularlo.
+
+
+
+#### Sintaxis utilizada
+
+\small
+
+```{r, ref.label=c('1', '2','3','4','5', '6','7','8','9', '10'), eval = FALSE, tidy=TRUE}
+
+```
+
