@@ -1,0 +1,71 @@
+# Aplicación para mirar los Precios de empresas tecnológicas
+# Desde datos de internet
+# Iván Mafla - Taller 3
+
+library(shiny)
+
+library(quantmod)   # este paquete permite hacer modelación financiera desde datos de internet
+
+ui<-fluidPage(
+  mainPanel(
+    titlePanel("Valores en mercado de empresas tecnológicas de 2017 y 2018"),
+  tabsetPanel(type = "tabs",
+              tabPanel("Acciones",
+  h1('Acciones de las Empresas'),
+  sidebarLayout(
+    sidebarPanel("Elija la Empresa que desea consultar",
+                 selectInput('empresa', 
+                             label = 'Empresa', 
+                             choices = c("Apple"="AAPL", "Cisco"="CSCO",
+                                         "IBM"="IBM", "Facebook"="FB",
+                                         "Twitter"="TWTR", "Microsoft"="MSFT",
+                                         "Google"="GOOG"))),
+                            
+    mainPanel(
+             h3('Acciones de la Empresa Seleccionada'),
+             p('Mostrándo el gráfico del precio de la Empresa seleccionada.'),
+             plotOutput('grafico'))
+    
+  )),
+  tabPanel("Dividendos",
+           h1("Dividendos de los accionistas de la empresas"),           
+           sidebarLayout(
+             sidebarPanel("Elija la Empresa que desea consultar",
+                          selectInput('Empresa', 
+                                      label = 'Empresa', 
+                                      choices = c("Apple"="AAPL", "Cisco"="CSCO",
+                                                  "IBM"="IBM", 
+                                                  "Microsoft"="MSFT"
+                                                ))),
+             mainPanel(
+                       h3('Dividendos de la Empresa Seleccionada'),
+                       p('Mostrándo el gráfico de los Dividendos de la Empresa seleccionada.'),
+                       plotOutput('grafico2'))
+             
+              )
+  )
+              )
+  
+)
+
+)
+
+server<-function(input, output) {
+  output$grafico <- renderPlot({
+    stockdata <- getSymbols(input$empresa, src="yahoo", from = "2017-01-01",
+                            to = "2018-04-21", auto.assign = FALSE)
+    #con getSymbols se extraen los datos en las fechas indicadas
+    candleChart(stockdata, name=input$empresa) #se genera un gráfico de velas
+    
+  })
+  output$grafico2 <- renderPlot({
+    stockdata1 <- getDividends(input$Empresa, src="yahoo", from = "2017-01-01",
+                            to = "2018-04-21", auto.assign = FALSE)
+    plot(stockdata1, name=input$Empresa)
+  })
+  
+  
+  
+}
+
+shinyApp(ui=ui, server=server)
