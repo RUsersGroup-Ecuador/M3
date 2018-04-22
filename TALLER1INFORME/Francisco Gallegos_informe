@@ -1,0 +1,176 @@
+---
+title: "Tarea Modulo II"
+author: "Francisco Gallegos Silva"
+date: "3 de abril de 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Datos y variables
+
+Para este ejercicio se utilizaron datos del Banco Mundial en el periodo 2000-2017 de los países en los cuales se tiene información disponible. Para la extracción de datos se utilizó el paquete $wbstats$.
+
+```{r, warning=FALSE, include=T}
+library(wbstats)
+```
+Se declara un objeto como data.frame que contiene los datos para el modelo. Las variables se especifican según la nomenclatura del paquete, la fecha inicial y final y el formato en que se estructura el data.frame (wide data).
+
+```{r, warning=FALSE, include=T}
+tourism_data <- wb(indicator = c("ST.INT.ARVL","NYGDPMKTPSAKD","PA.NUS.PPPC.RF"), 
+                     startdate = 2000, enddate = 2017, return_wide = T)
+```
+
+Se renombro a las variables para mayor entendimiento al realizar el análisis. 
+```{r, warning=FALSE, include=F}
+colnames(tourism_data)[which(names(tourism_data) == "ST.INT.ARVL")] <- "Arrivals"
+colnames(tourism_data)[which(names(tourism_data) == "NYGDPMKTPSAKD")] <- "GDP"
+colnames(tourism_data)[which(names(tourism_data) == "PA.NUS.PPPC.RF")] <- "Price_levels"
+library(dplyr)
+tourism_subdataset <- select(tourism_data,date,country,Arrivals,GDP,Price_levels)
+tourism_subdataset$date <- as.numeric(tourism_subdataset$date) 
+```
+A continuación la estructura del data.frame con los datos que se va a trabajar (panel de datos) y adicionalmente un sumario estadístico de los mismos:
+
+```{r, warning=FALSE, include=T}
+head(tourism_data)
+summary(tourism_subdataset)
+```
+
+## Modelos Lineales Univariantes
+
+Se plantea un modelo de determiantes de la demanda internacional de turismo con la siguiente forma funcional:
+
+$\ y_{it} = \beta0 + \beta1 X_{it} + \epsilon_{it}$.
+
+Donde $\ y_{it}$ es la demanda internacional expresada como el número de llegadas internacionales (Arrivals) al pais $i$ en el periodo $t$. El término $\beta0$ es la constante mientras que, $\beta1_{it}$ es el coeficiente de la variable explicativa $X1_{it}$, ya sea el PIB real (GDP) o el nivel de precios (Price_levels).  
+
+### Inspección gráfica
+
+Se realiza un histograma para concer la distribución de las variables que se van a incluir en el análisis
+```{r, include=FALSE}
+attach(tourism_subdataset)
+```
+
+```{r, echo=FALSE}
+par(mfrow=c(1,3))
+hist(GDP)
+hist(Arrivals)
+hist(Price_levels)
+```
+
+Los gráficos indican que solo la variable de nivel de precios (Price_levels) se aproxima a una normal, de tal manera que se decide transformar a logaritmos a las dos restantes.
+
+```{r, echo=FALSE}
+par(mfrow=c(1,3))
+hist(log(GDP))
+hist(log(Arrivals))
+hist(Price_levels)
+```
+
+Ahora que las variables siguen una distribución similar a una normal, el siguiente paso es identificar la relación que guarda la Demanda Internacional de Turismo (Arrivals) con las variables explicativas PIB real y el Nivel de precios. Teóricamente y empíricamente se ha demostrado que el PIB tiene una relación directa y positiva con la demanda internacional de turismo, explicado por el nivel de desarrollo de los destinos turísticos que pueden facilitar a los viajeros durante su estancia ( infraestructura, seguridad, conectividad). Por otro lado se ha demostrado que el nivel de precios tiene una relación directa y negativa con la demanda internacional de turismo, resultando un factor negativo el alto costo de vida en ciertos destino para el viajero promedio. 
+
+En los siguientes diagramas de dispersión se puede apreciar la relación de las variables en el conjunto de datos y la línea de regresión ajustada para cada modelo:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+m1 <- lm(log(Arrivals)~log(GDP))
+plot(log(Arrivals)~log(GDP),xlab="PIB per cápita", ylab="Arrivos",pch=1,main="Modelo 1")
+abline(m1, col="green")
+m2<- lm(log(Arrivals)~Price_levels)
+plot(log(Arrivals)~Price_levels, xlab="Nivel de precios", ylab="Arrivos",pch=1,main="Modelo2")
+abline(m2, col="blue")
+```
+
+Como se puede apreciar en las ilustraciones, los datos guardan la relación que sugiere la teoría en un solo caso, es decir la relación directa de los Arrivos con el PIB real (Modelo 1), por otro lado la relación de los Arrivos con el nivel de precios es distinta a la que se esperaba, ya que de igual manera es positiva.
+
+De manera más detallada se presenta los resultados de las estimaciones. 
+
+El primer modelo tiene la siguiente forma funcional,
+
+$\ Arrivals_{it} = \beta0 + \beta1 GDP_{it} + \epsilon_{it}$.
+
+las estimaciones del modelo son las siguientes:
+
+```{r, echo=FALSE}
+summary(m1)
+```
+
+El coeficiente estimado para la variable log(GDP) tiene el signo esperado, y es estadísticamente significativa a un nivel de confianza del 99%. Se puede interpretar que ante el cambio de 1% del PIB real (GDP) de un país esta asociado con el incremento del 0.58% de la demanda internacional de turismo, expresada como los Arrivos Internacionales (Arrivals). El error estándar indica una baja dispersión del indicador, mientras que el R-cuadrado indica un alto nivel predictivo del modelo, ya que supera el 65%. 
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(m1)
+```
+
+Los gráficos indican que la distribución de los errores se asemeja a una normal, que se adicionalmente se puede corroborar con el test de Shapiro-Wilk, y adicionalmente la independecia de los mismos con el test de Ljung-Box.
+
+```{r, include=FALSE}
+library(lmtest)
+```
+```{r, echo=FALSE, warning=FALSE}
+shapiro.test(m1$residuals)
+Box.test(m1$residuals, lag = 1, type = c("Ljung-Box"))
+```
+
+El test de Shapiro-Wilk corrobora, en cierto grado, lo visto anteriormente en el Q-Q plot, una distribución de los errores normales, ya que no se puede rechazar la Hipótesis Nula, a un nivel de confianza del 99%. Por otro lado el test Ljung-Box indica que los errores son independientes entre sí.
+
+
+El segundo modelo tiene la siguiente forma funcional,
+
+$\ Arrivals_{it} = \beta0 + \beta1 Pricelevels_{it} + \epsilon_{it}$.
+
+las estimaciones del modelo son las siguientes:
+
+```{r, echo=FALSE}
+summary(m2)
+```
+
+El coeficiente estimado para la variable Price_levels no tiene el signo esperado; sin embargo, es estadísticamente significativa a un nivel de confianza del 99%. Se puede interpretar que ante el cambio de una unidad en el Nivel de precios (Price_levels) de un país esta asociado con el incremento del 1.82% de la demanda internacional de turismo, expresada como los Arrivos Internacionales (Arrivals). El error estándar indica una baja dispersión del indicador, mientras que el R-cuadrado indica un bajo nivel predictivo del modelo, ya que apenas supera el 6%, a pesar de esto se puede considerar al modelo como explicativo, por el nivel de significancia. 
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(m2)
+```
+
+Los gráficos indican que la distribución de los errores se asemeja a una normal, que se adicionalmente se puede corroborar con el test de Shapiro-Wilk, y adicionalmente la independecia de los mismos con el test de Ljung-Box.
+
+```{r, echo=FALSE}
+shapiro.test(m2$residuals)
+Box.test(m2$residuals, lag = 1, type = c("Ljung-Box"))
+```
+
+El test de Shapiro-Wilk corrobora lo visto anteriormente en el Q-Q plot, una distribución de los errores normales, ya que no se puede rechazar la Hipótesis Nula, a un nivel de confianza del 99%. Por otro lado el test Ljung-Box indica que los errores son independientes entre sí.
+
+## Modelo Lineal Multivariante
+
+El tercer modelo, bajo un enfoque multivariante, tiene la siguiente forma funcional:
+
+$\ Arrivals_{it} = \beta0 + \beta1 GDP_{it} + \beta2 Pricelevels_{it} + \epsilon_{it}$.
+
+las estimaciones del modelo son las siguientes:
+
+```{r, echo=FALSE}
+m3 <- lm(log(Arrivals)~log(GDP)+Price_levels)
+summary(m3)
+```
+
+A diferencia de los modelos univariantes presentados anteriomente, los coeficientes estimados cambian en magnitud en ambos casos y en signo para la variable de Nivel de precios (Price_levels). Bajo un enfoque multivariante las estimaciones son consistentes con lo que sugiere la teoría, lo cual puede evidenciar los problemas dereivados de una variable omitida relevante dentro del modelo. El coeficiente estimado para la variable Price_levels tiene el signo esperado y es estadísticamente significativa a un nivel de confianza del 99%. Se puede interpretar que ante el cambio de una unidad en el Nivel de precios (Price_levels) de un país esta asociado con la reducción del 0.25% de la demanda internacional de turismo, expresada como los Arrivos Internacionales (Arrivals). El coeficiente estimado para la variable PIB real (GDP) tiene el signo esperado y es estadísticamente significativa a un nivel de confianza del 99%. Se puede interpretar que ante un cambio del 1% del PIB real se espera que la demanda internacional de turismo se incremente en 0.59%. El error estándar indica una disperción baja (0.01) en el estimador. El R-cuadrado ajustado indica un alto nivel predictivo del modelo, ya que supera el 65%, además de contar con poder explicativo en el modelo. 
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(m3)
+```
+
+Los gráficos indican que la distribución de los errores se asemeja a una normal, que se adicionalmente se puede corroborar con el test de Shapiro-Wilk, y adicionalmente la independecia de los mismos con el test de Ljung-Box.
+
+```{r, echo=FALSE}
+shapiro.test(m3$residuals)
+Box.test(m3$residuals, lag = 1, type = c("Ljung-Box"))
+```
+
+El test de Shapiro-Wilk corrobora lo visto anteriormente en el Q-Q plot, una distribución de los errores normales, ya que no se puede rechazar la Hipótesis Nula, a un nivel de confianza del 99%. Por otro lado el test Ljung-Box indica que los errores son independientes entre sí.
+
