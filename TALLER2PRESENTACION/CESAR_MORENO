@@ -1,0 +1,59 @@
+---
+title: "ESTADISTICAS GENERALES DE PERSONAS DESAPARECIDAS"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+---
+
+
+## ANTECEDENTES
+
+<div class=text-justify>
+
+Desde el 2013, el Estado ecuatoriano colocó políticas para el tratamiento de personas desaparecidas involuntarias en la agenda pública. Por esa razón, en el nuevo Código Integral Penal (COIP) se lo tipifica como imprescriptible.
+
+Los resultados obtenidos desde la creación de esta dirección son superlativos a comparación de cómo se trataba en años anteriores a los desaparecidos. Desde el 2014 hasta la fecha, la Dinased resolvió 19.132 casos, la Unidad tiene una eficacia del 92%. <http://www.desaparecidosecuador.gob.ec/>.
+</div>
+
+## ESTADO DE LAS DENUNCIAS
+
+```{r echo=FALSE}
+porcentaje <- c(96,4)
+label<-paste(porcentaje,"%",sep=" ")
+color<-c("green","deepskyblue")
+pie(porcentaje,labels = label,clockwise = TRUE,col = color,radius = 1)
+legend("topright",c("LOCALIZADOS", "DESAPARECIDOS"),cex = 0.8,fill=color)
+```
+
+##MOTIVACIÓN DE LA DESAPARICIÓN DE PERSONAS LOCALIZADAS
+
+  CON VOLUNTAD      |       SIN VOLUNTAD       |      FALLECIDOS       |
+------------------- | ------------------------ |-----------------------|
+PROBLEMAS:          | CAPACIDADES ESPECIALES   | ACCIDENTAL            |    
+FAMILIARES          | ENFERMEDADES             | SUICIDIO              |
+SOCIALES            | ACCIDENTES               | MUERTE NARURAL        |  
+ACADÉMICOS          | DESASTRES NATURALES      | DELITOS CONTRA LA VIDA| 
+ECONÓMICOS          | MENORES DE EDAD PERDIDOS |
+PSICOLÓGICOS        |
+
+## PORCENTAJE DE MOTIVACIÓN
+
+```{r echo=FALSE}
+porcentajei <- c(90.1,8.2,1.7)
+label<-paste(porcentajei,"%",sep=" ")
+color<-c("deepskyblue","green","red")
+pie(porcentajei,labels = label,clockwise = TRUE,col = color,radius = 1)
+legend("topright",c("CON VOLUNTAD", "SIN VOLUNTAD","FALLECIDOS"),cex = 0.8,fill=color)
+```
+
+## PORCENTAJE POR GRUPO ETARIO
+
+
+```{r echo=FALSE}
+library(plotrix)
+porcentajei <- c(65,21,14)
+label<-paste(porcentajei,"%",sep=" ")
+color<-c("deepskyblue","green","yellow")
+pie3D(porcentajei,labels = label,explode=0.00001,shade=0.4,col = color)
+legend("top",c("NIÑAS/NIÑOS Y ADOLECENTES", "ADULTOS","ADULTOS MAYORES"),cex = 0.6,fill=color)
+```
