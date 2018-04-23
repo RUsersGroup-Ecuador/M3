@@ -1,0 +1,69 @@
+#
+load(url("https://github.com/santiagopaucar/Ciclo_econ-mico/raw/master/ciclo1.RData"))
+
+ciclo <- as.data.frame(ciclo)
+ciclo[,2:ncol(ciclo)] <- format(ciclo[,2:ncol(ciclo)], digits = 2, nsmall = 2)
+
+ciclo$periodo <-seq(as.Date("1993/01/01"), by = "month", length.out = nrow(ciclo))
+ciclo$periodo1 <- ciclo$periodo
+ciclo$periodo2 <- as.character(ciclo$periodo)
+ciclo$periodo <- format(ciclo$periodo, "%Y-%b")
+tema1 <- theme(panel.background = element_rect(fill = "whitesmoke"), plot.title = element_text(hjust = 0.5, face = "bold"), plot.subtitle = element_text(hjust = 0.5))
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+library(scales)
+library(ggplot2)
+library(scales)
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("CICLO ECONOMICO DEL PIB"),
+   tabsetPanel(type = "pills",
+   tabPanel("Series",
+   sidebarLayout(
+      sidebarPanel(
+        dateRangeInput("ciclo", "Seleccione la fecha",
+                       start = "1993-01-01",
+                       end = "2017-12-31" ),
+        
+           selectInput("series", "Selecione la variable", 
+                       choices = names(ciclo) [-c(1:2,15:16)], selected = "Indicador Compuesto Adelantado"),
+      h4("CICLO")), 
+         mainPanel(
+           dataTableOutput(("variables"))
+           
+         ))
+      ),
+   tabPanel("Grafico",
+            plotOutput("grafico")
+            )
+   )
+)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  
+  serieica <- reactive({
+    tablafecha <- ciclo[ciclo$periodo2 >= input$ciclo[1] & ciclo$periodo2 <= input$ciclo[2], c("periodo","periodo1", "PIB 1993-2017", input$series)]
+    return(tablafecha)
+  }) 
+   output$variables <- renderDataTable({
+     datatable(serieica()[,c("periodo","PIB 1993-2017", input$series)], options = list(pageLength = 12, language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json")), 
+               rownames = FALSE)
+      
+   })
+ output$grafico <- renderPlot({
+  ggplot(data = serieica() ) + geom_line(aes( x = serieica()[,"periodo1"], y = as.numeric(serieica()[,input$series])), color = "forestgreen", size = 1.05 , linetype= "dashed" ) +
+     geom_line(aes( x = serieica()[,"periodo1"], y = as.numeric(serieica()[,"PIB 1993-2017"])), color = "dodgerblue4", size = 1.05) + labs(title = "Ciclo del PIB", subtitle = input$series, x = "\nPERIODO", y = "INDICE") + 
+     geom_smooth(aes( x = serieica()[,"periodo1"], y = as.numeric(serieica()[,"PIB 1993-2017"])), method = "lm")  + tema1 
+ 
+ })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
