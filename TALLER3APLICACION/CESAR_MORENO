@@ -1,0 +1,82 @@
+library(readxl)
+data <- read_excel("C:/Users/CESAR/Desktop/CURSO R/DEBER/MODULO 3/DATA FGE.xlsx")
+library(shiny)
+library(dplyr)
+library(highcharter)
+library(DT)
+data$TIPO_DELITO <- as.character(data$TIPO_DELITO)
+ui <- fluidPage(
+  titlePanel("FISCALÍA GENERAL DEL ESTADO"),
+  tabsetPanel(type = "tabs",
+              tabPanel("Principal",
+                       sidebarLayout(
+                         sidebarPanel(
+                           sliderInput("n","Registros",min = 1,max = 30,value = 10),
+                           selectInput("variable","Seleccione la variable:",
+                                       choices = names(data)[-c(2:3,6,7,11)],selected = "DELITO"),
+                                       tableOutput("tabla_resumen")
+                         ),
+                         mainPanel(
+                           tabsetPanel(type ="pills",
+                                       tabPanel("Tabla",dataTableOutput("tabla"),downloadButton("descarga","Descargar")
+                                       ),tabPanel("Grafico",highchartOutput("grafico"))
+                           )
+                         )
+                       )
+              ),
+              tabPanel("Secundario",
+                       h3("Consulta de NDD"),
+                       textInput("ndd", "Ingrese la NDD"),
+                       actionButton("buscar", "BUSCAR"),br(),br(),br(),
+                       textOutput("resultado"),br(),
+                       tableOutput("resultado2"),br(),
+                       verbatimTextOutput("resultado1")
+              )
+              
+  )
+)
+server <- function(input, output) {
+  
+  buscado <- eventReactive(input$buscar,{
+    if(is.na(as.numeric(input$ndd))==F & 
+       nchar(input$ndd)==7) {
+      data %>% filter(NDD==input$ndd)
+    } else {
+      data.frame(0)
+    }
+  })
+  output$resultado <- renderText({
+    ifelse(nrow(buscado())==1,
+           paste("El NDD buscado corresponde a",buscado()$FISCALIA),
+           "NDD no encontrado")
+  })
+  
+  output$resultado2 <- renderTable({
+    buscado()[,-which(names(buscado())=="TIPO_DELITO")]
+  })
+  
+  TIPO_DELITO <- reactive(buscado()$TIPO_DELITO)
+  output$resultado1 <- renderText(TIPO_DELITO())
+  
+  output$descarga <- downloadHandler(
+    filename = function() {"data.csv"},
+    content = function(file){
+      write.csv2(data, file)
+    })
+  
+  
+    output$tabla <- renderDataTable({
+    datatable(head(data[,c("NDD", "DELITO",input$variable)],input$n),extensions = 'Buttons', 
+    options = list(dom = 'Bfrtip',buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+    })
+  
+  output$tabla_resumen <- renderTable({
+    table(data[, c(input$variable)])
+    
+  })
+  output$grafico <- renderHighchart({
+    # c(1:input$n)
+    hchart(data[c(1:input$n),c(input$variable)], colorByPoint = TRUE, name = "variable")
+  })
+}
+shinyApp(ui = ui, server = server)
