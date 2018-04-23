@@ -1,0 +1,81 @@
+![](C:/Users/CESAR/Desktop/CURSO R/DEBER/MODULO 3/LOGO.PNG)
+---
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ESTADISICAS GENERALES DE PERSONAS DESAPARECIDAS
+
+<div class=text-justify>
+
+Desde el 2013, el Estado ecuatoriano colocó políticas para el tratamiento de personas desaparecidas involuntarias en la agenda pública. Por esa razón, en el nuevo Código Integral Penal (COIP) se lo tipifica como imprescriptible.
+
+El Ministerio del Interior a través de la Policía Nacional creó la Dirección Nacional de Delitos contra la Vida, Muertes Violentas, Desapariciones, Extorsión y Secuestro (Dinased), en el 2013, con el objetivo de tratar estos casos.
+
+Los resultados obtenidos desde la creación de esta dirección son superlativos a comparación de cómo se trataba en años anteriores a los desaparecidos. Desde el 2014 hasta la fecha, la Dinased resolvió 19.132 casos, la Unidad tiene una eficacia del 92%. <http://www.desaparecidosecuador.gob.ec/>.
+</div>
+```{r echo=FALSE}
+library(readxl)
+PORCENTAJE_PD <- read_excel("C:/Users/CESAR/Desktop/CURSO R/DEBER/MODULO 3/PORCENTAJE PD.xlsx")
+names(PORCENTAJE_PD)
+print(PORCENTAJE_PD)
+mean(PORCENTAJE_PD$PORCENTAJE)
+```
+<div class=text-justify>
+Como se puede obervar a nivel país tenemos un promedio del 4,1% de personas desaprecidas.
+A continuación se presenta el gráfico desagregado por provincia.
+</div>
+```{r echo=FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+
+# Plot
+ggplot(PORCENTAJE_PD, aes(x=PROVINCIA, y=PORCENTAJE)) + 
+  geom_point(size=3) + 
+  geom_segment(aes(x=PORCENTAJE_PD$PROVINCIA, 
+                   xend=PORCENTAJE_PD$PROVINCIA, 
+                   y=0, 
+                   yend=PORCENTAJE_PD$PORCENTAJE)) + 
+  labs(title="PORCENTAJE DE PERSONAS DESAPARECIDAS") + 
+  theme(axis.text.x = element_text(angle=90, vjust=0.3))
+```
+
+<div class=text-justify>
+Note que el mayor porcentaje se localiza en la provincia de Pichincha y Guayas por ser las provincias con mayor población a nivel nacional.
+</div>
+
+##NÚMERO DE DENUNCIAS DE PERSONAS DESAPARECIDAS.
+<div class=text-justify>
+En un trabajo conjunto entre Fiscalía y Dinased se consolido la cifra a 42484 denuncias de las cuales se han localizado a 40907 personas y 1577 personas siguen desaparecidas. 
+</div>
+```{r echo=FALSE}
+porcentaje <- c(96,4)
+label<-paste(porcentaje,"%",sep=" ")
+color<-c("green","deepskyblue")
+pie(porcentaje,labels = label,clockwise = TRUE, main = "ESTADO DE LAS DENUNCIAS",col = color,radius = 1)
+legend("topright",c("LOCALIZADOS", "DESAPARECIDOS"),cex = 0.8,fill=color)
+```
+
+##MOTIVACIÓN DE LA DESAPARICIÓN DE PERSONAS LOCALIZADAS
+
+  CON VOLUNTAD      |       SIN VOLUNTAD       |      FALLECIDOS       |
+------------------- | ------------------------ |-----------------------|
+PROBLEMAS:          | CAPACIDADES ESPECIALES   | ACCIDENTAL            |    
+FAMILIARES          | ENFERMEDADES             | SUICIDIO              |
+SOCIALES            | ACCIDENTES               | MUERTE NARURAL        |  
+ACADÉMICOS          | DESASTRES NATURALES      | DELITOS CONTRA LA VIDA| 
+ECONÓMICOS          | MENORES DE EDAD PERDIDOS |
+PSICOLÓGICOS        |
+```{r echo=FALSE}
+porcentajei <- c(90.1,8.2,1.7)
+label<-paste(porcentajei,"%",sep=" ")
+color<-c("deepskyblue","green","red")
+pie(porcentajei,labels = label,clockwise = TRUE, main = "MOTIVACIÓN DE LA DESAPARICÓN DE PERSONAS LOCALIZDAS",col = color,radius = 1)
+legend("topright",c("CON VOLUNTAD", "SIN VOLUNTAD","FALLECIDOS"),cex = 0.8,fill=color)
+```
+<div class=text-justify>
+Como se puede observar la mayor cantidad de las desaparriciones se producen con voluntad, lo que hace que las denuncias incrementen, así como tambien incrementen los recursos invertidos impidiendo en cierta parte contar con estos recursos para la busqueda de las personas que han desaparecido sin voluntad
+</div>
